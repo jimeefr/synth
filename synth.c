@@ -67,6 +67,7 @@ float do_adsr(enveloppe *e){
 
 void create_note_instr(note_instr *n, instrument *i, float f, float a){
   int os;
+  n->used = 1;
   n->instr = i;
   create_adsr(&(n->env), i->a, i->d, i->s, i->r);
   n->freq = f;
@@ -78,13 +79,32 @@ float do_note_instr(note_instr *n){
   int i;
   float e;
   float out = 0.f;
-  e = do_adsr(&(n->env));
-  if(e<0.f){
-    /* destroy this note */
-    return out;
+  if(n->used){
+    e = do_adsr(&(n->env));
+    if(e<0.f){
+      n->used = 0;
+    } else {
+      for(i=0; i<8; i++) out += do_osc(n->o+i);
+      out *= e * n->amp;
+    }
   }
-  for(i=0; i<8; i++) out += do_osc(n->o+i);
-  out *= e * n->amp;
   return out;
 }
 
+void init_synth(synth *s){
+  int i=31;
+  for(i=0; i<32; i++) s->note[i].used = 0;
+}
+
+void render_synth(synth *s, float *l, float *r){
+  int i;
+  float out;
+
+  *l = 0.f;
+  *r = 0.f;
+  for(i=0; i<32; i++){
+    out = do_note_instr(s->note+i);
+    *l += out;
+    *r += out;
+  }
+}

@@ -36,11 +36,19 @@ typedef struct _instrument {
 } instrument;
 
 typedef struct _note_instr {
+  int used;
   instrument *instr;
   enveloppe env;
   float freq;
   float amp;
   osc o[8];
 } note_instr;
+
+typedef struct _synth {
+  note_instr note[32];
+} synth;
+
+void init_synth(synth *s);
+void render_synth(synth *s, float *l, float *r);
 
 #endif
