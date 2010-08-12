@@ -18,10 +18,38 @@ FILE *fichier = 0;
 
 void fetch_audio_buffer(void *userdata, Uint8 *stream, int len){
   render_synth((synth *)userdata,(short *)stream,len>>2);
-  if(fichier)fwrite(stream,1,len,fichier);
+  //if(fichier)fwrite(stream,1,len,fichier);
 }
 
-int main(){
+#ifdef DEBUG
+inline void echo(char *s,int l){
+  asm("mov $4,%%eax\n"
+      "mov $1,%%ebx\n"
+      "int $0x80\n"
+      : : "c"(s), "d"(l) : "eax","ebx");
+}
+#endif
+
+//void usleep(int t){
+//  struct timespec ts;
+//  ts.tv_sec = t / 1000000;
+//  ts.tv_nsec = (t % 1000000) * 1000;
+//  asm("mov $162,%%eax\n"
+//      "xor %%ecx,%%ecx\n"
+//      "int $0x80\n"
+//      : : "b"(&ts) : "eax","ecx");
+//}
+
+char *my_strchr(char *s,char c){
+  char *p = s;
+  while(*p){
+    if(*p == c) return p;
+    else p++;
+  }
+  return 0;
+}
+
+void _start(){
   synth syn;
   SDL_AudioSpec desired, obtained;
   SDL_Event event;
@@ -34,53 +62,59 @@ int main(){
   desired.samples=1024;
   desired.callback=fetch_audio_buffer;
   desired.userdata = &syn;
-  SDL_Init(SDL_INIT_AUDIO|SDL_INIT_VIDEO);
-  atexit(SDL_Quit);
-  if(SDL_OpenAudio(&desired, &obtained) == -1) printf("SDL_OpenAudio(): %s\n",SDL_GetError());
-  SDL_SetVideoMode(320,240,32,0);
+  //SDL_Init(SDL_INIT_AUDIO|SDL_INIT_VIDEO);
+  if(!SDL_OpenAudio(&desired, &obtained)){
+    SDL_SetVideoMode(320,240,32,0);
   
-  init_synth(&syn);
+    init_synth(&syn);
 
-  SDL_PauseAudio(0);
-  while(!fini){
-    while(SDL_PollEvent(&event)) {
-      switch(event.type){
-        case SDL_KEYDOWN :
-          //printf("key %d %s\n",event.key.keysym.sym,event.key.state?"down":"up");
-          switch(event.key.keysym.sym){
-            case SDLK_ESCAPE : fini=1 ; break;
-	    case 'a' : fichier = fopen("out.raw","w"); break;
-	    case 'z' : if(fichier) fclose(fichier); fichier = 0; break;
-	    case 'o' : instr.cutoff /= 1.05f; break;
-	    case 'p' : instr.cutoff *= 1.05f; break;
-	    case 'l' : instr.res -= .05f; break;
-	    case 'm' : instr.res += .05f; break;
-            default :
-              if(p=strchr(keymap,event.key.keysym.sym)){
-                int note = p-keymap;
-		float freq = freqtable[note];
-		float amp = 0.2f;
-		create_note(&syn,freq,amp,&instr);
-	      }
-          }
-	  break;
-        case SDL_KEYUP :
-          //printf("key %d %s\n",event.key.keysym.sym,event.key.state?"down":"up");
-          switch(event.key.keysym.sym){
-            default :
-              if(p=strchr(keymap,event.key.keysym.sym)){
-                int note = p-keymap;
-		float freq = freqtable[note];
-		float amp = 0.2f;
-		release_note(&syn,freq,amp,&instr);
-	      }
-          }
-          break;
+    SDL_PauseAudio(0);
+    while(!fini){
+      while(SDL_PollEvent(&event)) {
+        switch(event.type){
+          case SDL_KEYDOWN :
+            switch(event.key.keysym.sym){
+              case SDLK_ESCAPE : fini=1 ; break;
+              case 'o' : instr.cutoff /= 1.05f; break;
+              case 'p' : instr.cutoff *= 1.05f; break;
+              case 'l' : instr.res -= .05f; break;
+              case 'm' : instr.res += .05f; break;
+              default :
+                if(p=my_strchr(keymap,event.key.keysym.sym)){
+                  int note = p-keymap;
+                  float freq = freqtable[note];
+                  float amp = 0.2f;
+                  create_note(&syn,freq,amp,&instr);
+                }
+            }
+            break;
+          case SDL_KEYUP :
+            switch(event.key.keysym.sym){
+              default :
+                if(p=my_strchr(keymap,event.key.keysym.sym)){
+                  int note = p-keymap;
+                  float freq = freqtable[note];
+                  float amp = 0.2f;
+                  release_note(&syn,freq,amp,&instr);
+                }
+            }
+            break;
+        }
       }
+      //usleep(1000);
     }
-    usleep(1000);
+    SDL_CloseAudio();
+#ifdef DEBUG
+  } else {
+    char *error = SDL_GetError();
+    char *t=error;
+    int len=-1;
+    while(t[++len]);
+    echo("SDL_OpenAudio(): ",17);
+    echo(error,len);
+    echo("\n",1);
+#endif
   }
-  SDL_CloseAudio();
-  if(fichier)fclose(fichier);
-  return 0;
+  //SDL_Quit();
+  asm("movl $1,%eax\nxor %ebx,%ebx\nint $128\n");
 }
