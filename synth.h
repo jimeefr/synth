@@ -25,6 +25,7 @@ typedef struct _enveloppe {
   float ad,da,dd,dr;
   float v,t;
   int on;
+  int started;
 } enveloppe;
 
 typedef struct _instrument {
@@ -33,6 +34,7 @@ typedef struct _instrument {
   osc_type type[8];
   float freq[8]; /* freq factor */
   float amp[8];
+  float cutoff,res;
 } instrument;
 
 typedef struct _note_instr {
@@ -42,6 +44,7 @@ typedef struct _note_instr {
   float freq;
   float amp;
   osc o[8];
+  float f,low,band; /* filter */
 } note_instr;
 
 typedef struct _synth {
@@ -49,6 +52,8 @@ typedef struct _synth {
 } synth;
 
 void init_synth(synth *s);
-void render_synth(synth *s, float *l, float *r);
+void create_note(synth *syn, float freq, float amp, instrument *instr);
+void release_note(synth *syn, float freq, float amp, instrument *instr);
+void render_synth(synth *s, short *audio_buffer, int len);
 
 #endif
