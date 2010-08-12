@@ -65,6 +65,7 @@ int main(){
           }
 	  break;
         case SDL_KEYUP :
+          //printf("key %d %s\n",event.key.keysym.sym,event.key.state?"down":"up");
           switch(event.key.keysym.sym){
             default :
               if(p=strchr(keymap,event.key.keysym.sym)){

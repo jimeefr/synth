@@ -25,7 +25,6 @@ typedef struct _enveloppe {
   float ad,da,dd,dr;
   float v,t;
   int on;
-  int started;
 } enveloppe;
 
 typedef struct _instrument {

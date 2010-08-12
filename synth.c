@@ -59,19 +59,15 @@ void create_adsr(enveloppe *e, float a, float d, float s, float r){
   e->dd = (d > 0.f) ? (1.f - s) / (d * SAMPLERATE_F) : 1.f;
   e->dr = (r > 0.f) ? s / (r * SAMPLERATE_F) : 1.f;
   e->on = 1;
-  e->started = 0;
 }
 
 __attribute__((fastcall)) float do_adsr(enveloppe *e){
-  if(e->on || !e->started){
-    if(e->t < e->a) e->v += e->da;
-    else if((e->t - e->a) < DT) e->v = 1.f;
-    else if(e->t < e->ad) e->v -= e->dd;
-    else e->v = e->s;
-  }
+  if(e->t < e->a) e->v += e->da;
+  else if((e->t - e->a) < DT) e->v = 1.f;
+  else if(e->t < e->ad) e->v -= e->dd;
+  else if(e->on) e->v = e->s;
   else e->v -= e->dr;
   e->t += DT;
-  e->started = 1;
   return e->v;
 }
 
