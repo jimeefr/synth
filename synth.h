@@ -29,11 +29,13 @@ typedef struct _enveloppe {
 
 typedef struct _instrument {
   float a,d,s,r;
-  /* 8 osc definitions */
-  osc_type type[8];
-  float freq[8]; /* freq factor */
-  float amp[8];
-  float cutoff,res;
+  /* 3 osc definitions */
+  osc_type type[3];
+  char freqt[3]; /* transpose [0;127] -> [-64;63] */
+  char freqf[3]; /* finetune [0;128[ -> [-1/4t;+1/4t[ */
+  char amp[3];   /* amplitude [0;127] -> [0.f;1.f](log) */
+  char cutoff;   /* [0;127] -> [20;SAMPLERATE/4](log) */
+  char res;      /* [0;128[ -> [0.f;1.f[ */
 } instrument;
 
 typedef struct _note_instr {
@@ -42,7 +44,8 @@ typedef struct _note_instr {
   enveloppe env;
   float freq;
   float amp;
-  osc o[8];
+  osc o[3];
+  float cutoff,res;
   float f,low,band; /* filter */
 } note_instr;
 

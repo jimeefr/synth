@@ -6,12 +6,12 @@ float freqtable[] = {
   261.6f,277.2f,293.7f,311.1f,329.6f,349.2f,370.f,392.f,415.3f,440.f,466.2f,493.9f,523.3f
 };
 instrument instr = {
- 0.0f, 0.1f , .0f, 0.f, /* a,d,s,r */
- { OSC_TRIANGLE, OSC_TRIANGLE, OSC_TRIANGLE, OSC_SQUARE,
-   OSC_SQUARE, OSC_NOISE, OSC_TRIANGLE, OSC_TRIANGLE }, /* 8 osc types */
- { 1.0f, 0.f, 0.f, 0.1f, 0.11f, 0.f, 0.f, 0.f }, /* 8 freqs */
- { 1.0f, 0.f, 0.f, 2.0f, 2.f, 0.f, 0.f, 0.f },  /* 8 amps */
- 800.f, 0.8f
+ 0.01f, 0.1f , 1.f, 1.f, /* a,d,s,r */
+ { OSC_TRIANGLE, OSC_SAW, OSC_SQUARE }, /* 3 osc types */
+ { 64, 64, 64 }, /* 3 transpose */
+ { 64, 66, 62 }, /* 3 finetune */
+ { 127,100,100 },/* 3 amps */
+ 100, 100         /* cutoff, res */
 };
 
 FILE *fichier = 0;
@@ -55,6 +55,10 @@ void _start(){
   SDL_Event event;
   int fini = 0;
   char *p;
+  float octave = 1.f;
+  int cutoff=instr.cutoff;
+  int res=instr.res;
+  int osc=1;
 
   desired.freq=SAMPLERATE;
   desired.format=AUDIO_S16;
@@ -75,15 +79,31 @@ void _start(){
           case SDL_KEYDOWN :
             switch(event.key.keysym.sym){
               case SDLK_ESCAPE : fini=1 ; break;
-              case 'o' : instr.cutoff /= 1.05f; break;
-              case 'p' : instr.cutoff *= 1.05f; break;
-              case 'l' : instr.res -= .05f; break;
-              case 'm' : instr.res += .05f; break;
+              case SDLK_KP1 : osc = 0; break;
+              case SDLK_KP2 : osc = 1; break;
+              case SDLK_KP3 : osc = 2; break;
+              case SDLK_KP4 : if(instr.freqt[osc] > 0 ) instr.freqt[osc]-=1; break; 
+              case SDLK_KP5 : if(instr.freqf[osc] > 0 ) instr.freqf[osc]-=1; break; 
+              case SDLK_KP6 : if(instr.amp[osc] > 0 ) instr.amp[osc]-=1; break; 
+              case SDLK_KP7 : if(instr.freqt[osc] < 127 ) instr.freqt[osc]+=1; break; 
+              case SDLK_KP8 : if(instr.freqf[osc] < 127 ) instr.freqf[osc]+=1; break; 
+              case SDLK_KP9 : if(instr.amp[osc] < 127 ) instr.amp[osc]+=1; break; 
+              case SDLK_KP_DIVIDE   : instr.type[osc] = OSC_TRIANGLE; break;
+              case SDLK_KP_MULTIPLY : instr.type[osc] = OSC_SAW; break;
+              case SDLK_KP_MINUS    : instr.type[osc] = OSC_SQUARE; break;
+              case SDLK_KP_PLUS     : instr.type[osc] = OSC_NOISE; break;
+              case 'o' : cutoff -= 1; if(cutoff<0) cutoff=0; break;
+              case 'p' : cutoff += 1; if(cutoff>127) cutoff=127; break;
+              case 'l' : res -= 1; if(res<0) res=0; break;
+              case 'm' : res += 1; if(res>127) res=127; break;
+              case 'a' : octave /= 2.f; break;
+              case 'z'   : octave *= 2.f; break;
               default :
-                if(p=my_strchr(keymap,event.key.keysym.sym)){
+                if((p=my_strchr(keymap,event.key.keysym.sym))){
                   int note = p-keymap;
-                  float freq = freqtable[note];
-                  float amp = 0.2f;
+                  float freq = octave * freqtable[note];
+                  float amp = .2f;
+                  instr.cutoff=cutoff; instr.res=res;
                   create_note(&syn,freq,amp,&instr);
                 }
             }
@@ -91,9 +111,9 @@ void _start(){
           case SDL_KEYUP :
             switch(event.key.keysym.sym){
               default :
-                if(p=my_strchr(keymap,event.key.keysym.sym)){
+                if((p=my_strchr(keymap,event.key.keysym.sym))){
                   int note = p-keymap;
-                  float freq = freqtable[note];
+                  float freq = octave * freqtable[note];
                   float amp = 0.2f;
                   release_note(&syn,freq,amp,&instr);
                 }
