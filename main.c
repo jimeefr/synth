@@ -6,7 +6,7 @@ float freqtable[] = {
   261.6f,277.2f,293.7f,311.1f,329.6f,349.2f,370.f,392.f,415.3f,440.f,466.2f,493.9f,523.3f
 };
 instrument instr = {
- 0.01f, 0.1f , 1.f, 1.f, /* a,d,s,r */
+ 19, 59 , 127, 99, /* a,d,s,r */
  { OSC_TRIANGLE, OSC_SAW, OSC_SQUARE }, /* 3 osc types */
  { 64, 64, 64 }, /* 3 transpose */
  { 64, 66, 62 }, /* 3 finetune */

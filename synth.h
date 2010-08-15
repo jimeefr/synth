@@ -28,7 +28,7 @@ typedef struct _enveloppe {
 } enveloppe;
 
 typedef struct _instrument {
-  float a,d,s,r;
+  char a,d,s,r;
   /* 3 osc definitions */
   osc_type type[3];
   char freqt[3]; /* transpose [0;127] -> [-64;63] */

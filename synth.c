@@ -82,7 +82,11 @@ __attribute__((fastcall)) void create_note_instr(note_instr *n, instrument *i, f
   int os;
   n->used = 1;
   n->instr = i;
-  create_adsr(&(n->env), i->a, i->d, i->s, i->r);
+  create_adsr(&(n->env),
+              calc_freq(3.258886363e-3f,1.059463094f,i->a),
+              calc_freq(3.258886363e-3f,1.059463094f,i->d),
+              (float)(i->s) / 127.f,
+              calc_freq(3.258886363e-3f,1.059463094f,i->r));
   n->freq = f;
   n->amp = a;
   os = 2; do create_osc(n->o+os, i->type[os], 
