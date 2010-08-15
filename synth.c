@@ -121,45 +121,46 @@ __attribute__((fastcall)) float do_note_instr(note_instr *n){
   return out;
 }
 
-void init_synth(synth *s){
+static note_instr note[32];
+
+void init_synth(){
   int i=31;
-  do { s->note[i].used = 0; } while(i--);
+  do { note[i].used = 0; } while(i--);
 }
 
-void create_note(synth *syn, float freq, float amp, instrument *instr){
+void create_note(float freq, float amp, instrument *instr){
   int i=31;
   do {
-    if(!syn->note[i].used){
-      create_note_instr(syn->note+i,instr,freq,amp);
+    if(!note[i].used){
+      create_note_instr(note+i,instr,freq,amp);
       i=0;
     }
   } while(i--);
 }
 
-void release_note(synth *syn, float freq, float amp, instrument *instr){
+void release_note(float freq, float amp, instrument *instr){
   int i=31;
   do {
-    if(syn->note[i].used){
-      if((syn->note[i].instr == instr) && (syn->note[i].freq == freq) && syn->note[i].env.on){
-        syn->note[i].env.on = 0;
+    if(note[i].used){
+      if((note[i].instr == instr) && (note[i].freq == freq) && note[i].env.on){
+        note[i].env.on = 0;
         //i=0;
       }
     }
   } while(i--);
 }
 
-void render_synth(synth *s, short *audio_buffer, int len){
+void render_synth(short *audio_buffer, int len){
   int i;
   float out;
-  note_instr *p;
   register short *sp = audio_buffer;
   short sh;
 
   do {
-    i=32; out=0.f; p=s->note;
+    i=31; out=0.f;
     do {
-      out += do_note_instr(p++);
-    } while(--i);
+      out += do_note_instr(note+i);
+    } while(i--);
     sh = *(sp++) = (short)(out * 32767.f);
     *(sp++) = sh;
   } while(--len);

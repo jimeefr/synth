@@ -49,13 +49,9 @@ typedef struct _note_instr {
   float f,low,band; /* filter */
 } note_instr;
 
-typedef struct _synth {
-  note_instr note[32];
-} synth;
-
-void init_synth(synth *s);
-void create_note(synth *syn, float freq, float amp, instrument *instr);
-void release_note(synth *syn, float freq, float amp, instrument *instr);
-void render_synth(synth *s, short *audio_buffer, int len);
+void init_synth();
+void create_note(float freq, float amp, instrument *instr);
+void release_note(float freq, float amp, instrument *instr);
+void render_synth(short *audio_buffer, int len);
 
 #endif
