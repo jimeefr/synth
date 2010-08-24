@@ -33,22 +33,22 @@ typedef struct _ruler {
 } ruler;
 
 void draw_ruler(ruler *rul){
-  int pos = (*(rul->value)-rul->min) * (rul->x2-rul->x1-3) / (rul->max-rul->min+1) + rul->x1+2;
+  int pos = (*(rul->value)-rul->min+1) * (rul->x2-rul->x1-3) / (rul->max-rul->min+1) + rul->x1+2;
   glColor3ub(255,255,255);
   glBegin(GL_QUADS);
   glVertex2i(rul->x1,rul->y1);
-  glVertex2i(rul->x1,rul->y2);
-  glVertex2i(rul->x2,rul->y2);
-  glVertex2i(rul->x2,rul->y1);
+  glVertex2i(rul->x1,rul->y2+1);
+  glVertex2i(rul->x2+1,rul->y2+1);
+  glVertex2i(rul->x2+1,rul->y1);
   glColor3ub(0,0,0);
   glVertex2i(rul->x1+1,rul->y1+1);
-  glVertex2i(rul->x1+1,rul->y2-1);
-  glVertex2i(rul->x2-1,rul->y2-1);
-  glVertex2i(rul->x2-1,rul->y1+1);
+  glVertex2i(rul->x1+1,rul->y2);
+  glVertex2i(rul->x2,rul->y2);
+  glVertex2i(rul->x2,rul->y1+1);
   glColor3ub(255,255,255);
   glVertex2i(rul->x1+2,rul->y1+2);
-  glVertex2i(rul->x1+2,rul->y2-2);
-  glVertex2i(pos,rul->y2-2);
+  glVertex2i(rul->x1+2,rul->y2-1);
+  glVertex2i(pos,rul->y2-1);
   glVertex2i(pos,rul->y1+2);
   glEnd();
 }
@@ -101,24 +101,25 @@ void draw_gui(){
   SDL_GL_SwapBuffers();
 }
 
+static char toto;
 void gui_init(){
   int i=0;
-  SDL_SetVideoMode(320,240,32,SDL_OPENGL|SDL_FULLSCREEN);
+  SDL_SetVideoMode(320,240,32,SDL_OPENGL);
   glViewport(0,0,320,240);
   init_synth();
   create_ruler(R+(i++),10,10,141,16,0,127,&(instr.a));
   create_ruler(R+(i++),160,10,291,16,0,127,&(instr.d));
   create_ruler(R+(i++),10,20,141,26,0,127,&(instr.s));
   create_ruler(R+(i++),160,20,291,26,0,127,&(instr.r));
-  create_ruler(R+(i++),10,40,141,46,0,3,&(instr.type[0]));
+  create_ruler(R+(i++),10,40,141,46,0,3,(char *)&(instr.type[0]));
   create_ruler(R+(i++),10,50,141,56,0,127,&(instr.freqt[0]));
   create_ruler(R+(i++),10,60,141,66,0,127,&(instr.freqf[0]));
   create_ruler(R+(i++),10,70,141,76,0,127,&(instr.amp[0]));
-  create_ruler(R+(i++),160,40,291,46,0,3,&(instr.type[1]));
+  create_ruler(R+(i++),160,40,291,46,0,3,(char *)&(instr.type[1]));
   create_ruler(R+(i++),160,50,291,56,0,127,&(instr.freqt[1]));
   create_ruler(R+(i++),160,60,291,66,0,127,&(instr.freqf[1]));
   create_ruler(R+(i++),160,70,291,76,0,127,&(instr.amp[1]));
-  create_ruler(R+(i++),10,90,141,96,0,3,&(instr.type[2]));
+  create_ruler(R+(i++),10,90,141,96,0,3,(char *)&(instr.type[2]));
   create_ruler(R+(i++),10,100,141,106,0,127,&(instr.freqt[2]));
   create_ruler(R+(i++),10,110,141,116,0,127,&(instr.freqf[2]));
   create_ruler(R+(i++),10,120,141,126,0,127,&(instr.amp[2]));
