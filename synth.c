@@ -33,15 +33,13 @@ __attribute__((fastcall)) static void create_osc(osc *o, osc_type t, float f, fl
 }
 
 __attribute__((fastcall)) static float do_osc(osc *o){
-  float out=0.f;
-  if(o->freq != 0.f){
-    if((o->ph += o->iph) >=1.f) o->ph -= 1.f;
-    if(o->type==OSC_TRIANGLE)    out = (o->ph < .5f) ? (4.f * o->ph - 1.f) : (-4.f * o->ph + 3.f);
-    else if(o->type==OSC_SAW)    out = 2.f * o->ph - 1.f;
-    else if(o->type==OSC_SQUARE) out = (o->ph < .5f) ? -1.f : 1.f;
-    else if(o->type==OSC_NOISE)  out = my_rand();
-    out *= o->amp;
-  }
+  float out;
+  if((o->ph += o->iph) >=1.f) o->ph -= 1.f;
+  if(o->type==OSC_TRIANGLE)    out = (o->ph < .5f) ? (4.f * o->ph - 1.f) : (-4.f * o->ph + 3.f);
+  else if(o->type==OSC_SAW)    out = 2.f * o->ph - 1.f;
+  else if(o->type==OSC_SQUARE) out = (o->ph < .5f) ? -1.f : 1.f;
+  else if(o->type==OSC_NOISE)  out = my_rand();
+  out *= o->amp;
   return out;
 }
 
@@ -56,7 +54,7 @@ __attribute__((fastcall)) static void create_adsr(enveloppe *e, float a, float d
   e->da = (a > 0.f) ? 1.f / (a * SAMPLERATE_F) : 1.f;
   e->dd = (d > 0.f) ? (1.f - s) / (d * SAMPLERATE_F) : 1.f;
   e->dr = (r > 0.f) ? s / (r * SAMPLERATE_F) : 1.f;
-  e->on = 1;
+  ++e->on;
 }
 
 __attribute__((fastcall)) static float do_adsr(enveloppe *e){
@@ -70,8 +68,7 @@ __attribute__((fastcall)) static float do_adsr(enveloppe *e){
 }
 
 __attribute__((fastcall)) void create_note_instr(note_instr *n, instrument *i, int f, int a){
-  int os;
-  n->used = 1;
+  ++n->used;
   n->instr = i;
   create_adsr(&(n->env),
               calc_freq(3.258886363e-3f,1.059463094f,i->a),
@@ -80,7 +77,7 @@ __attribute__((fastcall)) void create_note_instr(note_instr *n, instrument *i, i
               calc_freq(3.258886363e-3f,1.059463094f,i->r));
   n->freq = f;
   n->amp = (float)(a) / 127.f;
-  os = 2; do create_osc(n->o+os, i->o[os].type, 
+  register int os = 2; do create_osc(n->o+os, i->o[os].type, 
                         calc_freq(0.405570987f,1.059463094f,i->o[os].freqt+f) * 
                         calc_freq(0.971531941f,1.000451664f,i->o[os].freqf),
                         (float)(i->o[os].amp) / 127.f); while(os--);
@@ -93,7 +90,7 @@ __attribute__((fastcall)) float do_note_instr(note_instr *n){
   osc *o = n->o;
   if(n->used){
     if((e = do_adsr(&(n->env)))<=0.f){
-      n->used = 0;
+      --n->used;
     } else {
       register char i=3;
       do { out += do_osc(o++); } while(--i);
@@ -110,32 +107,36 @@ __attribute__((fastcall)) float do_note_instr(note_instr *n){
   return out;
 }
 
-static note_instr note[32];
+note_instr note[32];
 
 void init_synth(){
-  int i=31;
+  register int i=31;
   do { note[i].used = 0; } while(i--);
 }
 
 void create_note(int freq, int amp, instrument *instr){
   int i=31;
+  note_instr *n = note;
   do {
-    if(!note[i].used){
-      create_note_instr(note+i,instr,freq,amp);
+    if(!n->used){
+      create_note_instr(n++,instr,freq,amp);
       i=0;
     }
+    n++;
   } while(i--);
 }
 
 void release_note(int freq, int amp, instrument *instr){
-  int i=31;
+  register int i=31;
+  register note_instr *n = note;
   do {
-    if(note[i].used){
-      if((note[i].instr == instr) && (note[i].freq == freq) && note[i].env.on){
-        note[i].env.on = 0;
+    if(n->used){
+      if((n->instr == instr) && (n->freq == freq)){
+        n->env.on = 0;
         //i=0;
       }
     }
+    n++;
   } while(i--);
 }
 

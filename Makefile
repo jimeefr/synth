@@ -8,6 +8,7 @@ main: main.o synth.o gui.o
 	@echo 'a=/tmp/I;tail -n+2 $$0|zcat>$$a;chmod +x $$a;$$a; exit' > main
 	@cat main.gz >> main
 	@rm main.gz
+	@echo "compressed size:   " `wc -c main`
 
 clean:
 	rm -f *.o main
