@@ -4,21 +4,15 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-char keymap[] = "wsxdcvgbhnj,;";
-float freqtable[] = {
-  261.6f,277.2f,293.7f,311.1f,329.6f,349.2f,370.f,392.f,415.3f,440.f,466.2f,493.9f,523.3f
-};
 instrument instr = {
  19, 59 , 127, 99, /* a,d,s,r */
- { OSC_TRIANGLE, OSC_SAW, OSC_SQUARE }, /* 3 osc types */
- { 64, 64, 64 }, /* 3 transpose */
- { 64, 66, 62 }, /* 3 finetune */
- { 127,100,100 },/* 3 amps */
- 100, 100         /* cutoff, res */
+ { { OSC_SAW,64,64,64 },
+   { OSC_SAW,64,76,64 },
+   { OSC_SAW,64,54,64 } },
+ 95, 100         /* cutoff, res */
 };
 
-char *my_strchr(char *s,char c){
-  char *p = s;
+__attribute__((fastcall)) static char *my_strchr(char *p,char c){
   while(*p){
     if(*p == c) return p;
     else p++;
@@ -27,33 +21,33 @@ char *my_strchr(char *s,char c){
 }
 
 typedef struct _ruler {
-  int x1,y1,x2,y2;
+  short x1,y1,x2,y2;
   char min, max;
   char *value;
 } ruler;
 
+__attribute__((fastcall)) static void rect(int x1,int y1,int x2,int y2){
+  glVertex2i(x1,y1);
+  glVertex2i(x1,y2);
+  glVertex2i(x2,y2);
+  glVertex2i(x2,y1);
+}
+
 void draw_ruler(ruler *rul){
-  int pos = (*(rul->value)-rul->min+1) * (rul->x2-rul->x1-3) / (rul->max-rul->min+1) + rul->x1+2;
-  glColor3ub(255,255,255);
+  int x1,y1,x2,y2;
+  x1 = rul->x1; x2 = rul->x2+1;
+  y1 = rul->y1; y2 = rul->y2+1;
   glBegin(GL_QUADS);
-  glVertex2i(rul->x1,rul->y1);
-  glVertex2i(rul->x1,rul->y2+1);
-  glVertex2i(rul->x2+1,rul->y2+1);
-  glVertex2i(rul->x2+1,rul->y1);
-  glColor3ub(0,0,0);
-  glVertex2i(rul->x1+1,rul->y1+1);
-  glVertex2i(rul->x1+1,rul->y2);
-  glVertex2i(rul->x2,rul->y2);
-  glVertex2i(rul->x2,rul->y1+1);
   glColor3ub(255,255,255);
-  glVertex2i(rul->x1+2,rul->y1+2);
-  glVertex2i(rul->x1+2,rul->y2-1);
-  glVertex2i(pos,rul->y2-1);
-  glVertex2i(pos,rul->y1+2);
+  rect(x1++,y1++,x2--,y2--);
+  glColor3ub(0,0,0);
+  rect(x1++,y1++,x2,y2--);
+  glColor3ub(255,255,255);
+  rect(x1,y1,(*(rul->value)-rul->min+1) * (x2-x1-1) / (rul->max-rul->min+1) + x1,y2);
   glEnd();
 }
 
-void move_ruler(ruler *rul, int x, int y){
+__attribute__((fastcall)) static void move_ruler(ruler *rul, int x, int y){
   if((x > rul->x1+1) &&
      (x < rul->x2-1) &&
      (y > rul->y1+1) &&
@@ -64,20 +58,21 @@ void move_ruler(ruler *rul, int x, int y){
 #define RULERS 18
 
 void move_rulers(ruler *rul, int x, int y){
-  int i=RULERS-1;
+  int i=RULERS;
   do {
-    if(rul[i].value) move_ruler(rul+i,x,y);
-  } while(i--);
+    move_ruler(rul++,x,y);
+  } while(--i);
 }
 
-void draw_rulers(ruler *rul){
-  int i=RULERS-1;
+static void draw_rulers(ruler *rul){
+  int i=RULERS;
   do {
-    if(rul[i].value) draw_ruler(rul+i);
-  } while(i--);
+    draw_ruler(rul++);
+  } while(--i);
 }
 
-void create_ruler(ruler *rul,int x1, int y1, int x2, int y2, char min, char max, char *val){
+/*
+static void create_ruler(ruler *rul,int x1, int y1, int x2, int y2, char min, char max, char *val){
   rul->x1=x1;
   rul->x2=x2;
   rul->y1=y1;
@@ -86,10 +81,30 @@ void create_ruler(ruler *rul,int x1, int y1, int x2, int y2, char min, char max,
   rul->max=max;
   rul->value=val;
 }
+*/
 
-ruler R[RULERS];
+ruler R[RULERS] = {
+  {10,10,141,18,0,127,&(instr.a)},
+  {10,20,141,28,0,127,&(instr.s)},
+  {10,40,141,48,0,3,(char *)&(instr.o[0].type)},
+  {10,50,141,58,0,127,&(instr.o[0].freqt)},
+  {10,60,141,68,0,127,&(instr.o[0].freqf)},
+  {10,70,141,78,0,127,&(instr.o[0].amp)},
+  {10,90,141,98,0,3,(char *)&(instr.o[2].type)},
+  {10,100,141,108,0,127,&(instr.o[2].freqt)},
+  {10,110,141,118,0,127,&(instr.o[2].freqf)},
+  {10,120,141,128,0,127,&(instr.o[2].amp)},
+  {10,140,141,148,0,127,&(instr.cutoff)},
+  {10,150,141,158,0,127,&(instr.res)},
+  {160,40,291,48,0,3,(char *)&(instr.o[1].type)},
+  {160,50,291,58,0,127,&(instr.o[1].freqt)},
+  {160,60,291,68,0,127,&(instr.o[1].freqf)},
+  {160,70,291,78,0,127,&(instr.o[1].amp)},
+  {160,10,291,18,0,127,&(instr.d)},
+  {160,20,291,28,0,127,&(instr.r)}
+};
 
-void draw_gui(){
+static void draw_gui(){
   glClear(GL_COLOR_BUFFER_BIT);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
@@ -101,90 +116,45 @@ void draw_gui(){
   SDL_GL_SwapBuffers();
 }
 
-static char toto;
 void gui_init(){
-  int i=0;
   SDL_SetVideoMode(320,240,32,SDL_OPENGL);
   glViewport(0,0,320,240);
   init_synth();
-  create_ruler(R+(i++),10,10,141,16,0,127,&(instr.a));
-  create_ruler(R+(i++),160,10,291,16,0,127,&(instr.d));
-  create_ruler(R+(i++),10,20,141,26,0,127,&(instr.s));
-  create_ruler(R+(i++),160,20,291,26,0,127,&(instr.r));
-  create_ruler(R+(i++),10,40,141,46,0,3,(char *)&(instr.type[0]));
-  create_ruler(R+(i++),10,50,141,56,0,127,&(instr.freqt[0]));
-  create_ruler(R+(i++),10,60,141,66,0,127,&(instr.freqf[0]));
-  create_ruler(R+(i++),10,70,141,76,0,127,&(instr.amp[0]));
-  create_ruler(R+(i++),160,40,291,46,0,3,(char *)&(instr.type[1]));
-  create_ruler(R+(i++),160,50,291,56,0,127,&(instr.freqt[1]));
-  create_ruler(R+(i++),160,60,291,66,0,127,&(instr.freqf[1]));
-  create_ruler(R+(i++),160,70,291,76,0,127,&(instr.amp[1]));
-  create_ruler(R+(i++),10,90,141,96,0,3,(char *)&(instr.type[2]));
-  create_ruler(R+(i++),10,100,141,106,0,127,&(instr.freqt[2]));
-  create_ruler(R+(i++),10,110,141,116,0,127,&(instr.freqf[2]));
-  create_ruler(R+(i++),10,120,141,126,0,127,&(instr.amp[2]));
-  create_ruler(R+(i++),10,140,141,146,0,127,&(instr.cutoff));
-  create_ruler(R+(i++),10,150,141,156,0,127,&(instr.res));
 }
 
-static int fini = 0;
-static float octave = 1.f;
-static int current_osc=0;
+int fini = 0;
+char octave = 4;
+char keymap[] = 
+  "wsxdcvgbhnj,;l:m!"
+  "a\xe9z\"er(t-y\xe8ui\xe7o\xe0p^=$";
+char notetable[] = {
+   0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,
+  12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31
+};
 
-void gui_check_event(){
+static void gui_check_event(){
   SDL_Event event;
   char *p;
 
   while(SDL_PollEvent(&event)) {
-    switch(event.type){
-      case SDL_KEYDOWN :
-        switch(event.key.keysym.sym){
-          case SDLK_ESCAPE : fini=1 ; break;
-          case SDLK_KP1 : current_osc = 0; break;
-          case SDLK_KP2 : current_osc = 1; break;
-          case SDLK_KP3 : current_osc = 2; break;
-          case SDLK_KP4 : if(instr.freqt[current_osc] > 0 ) instr.freqt[current_osc]-=1; break; 
-          case SDLK_KP5 : if(instr.freqf[current_osc] > 0 ) instr.freqf[current_osc]-=1; break; 
-          case SDLK_KP6 : if(instr.amp[current_osc] > 0 ) instr.amp[current_osc]-=1; break; 
-          case SDLK_KP7 : if(instr.freqt[current_osc] < 127 ) instr.freqt[current_osc]+=1; break; 
-          case SDLK_KP8 : if(instr.freqf[current_osc] < 127 ) instr.freqf[current_osc]+=1; break; 
-          case SDLK_KP9 : if(instr.amp[current_osc] < 127 ) instr.amp[current_osc]+=1; break; 
-          case SDLK_KP_DIVIDE   : instr.type[current_osc] = OSC_TRIANGLE; break;
-          case SDLK_KP_MULTIPLY : instr.type[current_osc] = OSC_SAW; break;
-          case SDLK_KP_MINUS    : instr.type[current_osc] = OSC_SQUARE; break;
-          case SDLK_KP_PLUS     : instr.type[current_osc] = OSC_NOISE; break;
-          case 'o' : if(instr.cutoff>0) instr.cutoff--; break;
-          case 'p' : if(instr.cutoff<127) instr.cutoff++; break;
-          case 'l' : if(instr.res>0) instr.res--; break;
-          case 'm' : if(instr.res<127) instr.res++; break;
-          case 'a' : octave /= 2.f; break;
-          case 'z'   : octave *= 2.f; break;
-          default :
-            if((p=my_strchr(keymap,event.key.keysym.sym))){
-              int note = p-keymap;
-              float freq = octave * freqtable[note];
-              float amp = .2f;
-              create_note(freq,amp,&instr);
-            }
-        }
-        break;
-      case SDL_KEYUP :
-        switch(event.key.keysym.sym){
-          default :
-            if((p=my_strchr(keymap,event.key.keysym.sym))){
-              int note = p-keymap;
-              float freq = octave * freqtable[note];
-              float amp = 0.2f;
-              release_note(freq,amp,&instr);
-            }
-        }
-        break;
-      case SDL_MOUSEMOTION :
-        if(event.motion.state & SDL_BUTTON(1)) move_rulers(R,event.motion.x,event.motion.y);
-        break;
-      case SDL_MOUSEBUTTONDOWN :
-        if(event.button.button == 1) move_rulers(R,event.button.x,event.button.y);
-        break;
+    if(event.type == SDL_KEYDOWN){
+      if(event.key.keysym.sym == SDLK_ESCAPE) fini=1;
+      else if(event.key.keysym.sym == SDLK_F1) octave--;
+      else if(event.key.keysym.sym == SDLK_F2) octave++;
+      else if((p=my_strchr(keymap,event.key.keysym.sym))) 
+        create_note(octave*12+notetable[p-keymap],20,&instr);
+    } else if(event.type == SDL_KEYUP){
+      if((p=my_strchr(keymap,event.key.keysym.sym))){
+        release_note(octave*12 + notetable[p-keymap],20,&instr);
+      }
+    } else if(event.type == SDL_MOUSEMOTION){
+      if(event.motion.state & SDL_BUTTON(1)) move_rulers(R,event.motion.x,event.motion.y);
+    } else if(event.type == SDL_MOUSEBUTTONDOWN){
+      if(event.button.button == 1) move_rulers(R,event.button.x,event.button.y);
+      else if(event.button.button == 5) { if(instr.cutoff>0) instr.cutoff--; }
+      else if(event.button.button == 4) { if(instr.cutoff<119) instr.cutoff++; }
+      else if(event.button.button == 6) { if(instr.res>0) instr.res--; }
+      else if(event.button.button == 7) { if(instr.res<127) instr.res++; }
     }
   }
 }
@@ -193,6 +163,5 @@ void gui_mainloop(){
   while(!fini){
     draw_gui();
     gui_check_event();
-    //usleep(1000);
   }
 }

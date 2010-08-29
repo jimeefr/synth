@@ -5,11 +5,12 @@ static unsigned int my_seed = 32627;
 
 __attribute__((fastcall)) static float my_rand()
 {
-  union { float f; unsigned int i;} res;
+  //union { float f; unsigned int i; } res;
 
   my_seed *= 16807;
-  res.i = ( my_seed >> 9 ) | 0x40000000;
-  return (res.f - 3.0f);
+  //res.i = ( my_seed >> 9 ) | 0x40000000;
+  //return (res.f - 3.0f);
+  return ((float)my_seed) / (float)0x80000000;
 }
 
 __attribute((fastcall)) static float calc_freq(float base, float interval, int nint){
@@ -35,20 +36,10 @@ __attribute__((fastcall)) static float do_osc(osc *o){
   float out=0.f;
   if(o->freq != 0.f){
     if((o->ph += o->iph) >=1.f) o->ph -= 1.f;
-    switch(o->type){
-      case OSC_TRIANGLE :
-        out = (o->ph < .5f) ? (4.f * o->ph - 1.f) : (-4.f * o->ph + 3.f);
-        break;
-      case OSC_SAW :
-        out = 2.f * o->ph - 1.f;
-        break;
-      case OSC_SQUARE :
-        out = (o->ph < .5f) ? -1.f : 1.f;
-        break;
-      case OSC_NOISE :
-        out = my_rand();
-        break;
-    }
+    if(o->type==OSC_TRIANGLE)    out = (o->ph < .5f) ? (4.f * o->ph - 1.f) : (-4.f * o->ph + 3.f);
+    else if(o->type==OSC_SAW)    out = 2.f * o->ph - 1.f;
+    else if(o->type==OSC_SQUARE) out = (o->ph < .5f) ? -1.f : 1.f;
+    else if(o->type==OSC_NOISE)  out = my_rand();
     out *= o->amp;
   }
   return out;
@@ -78,7 +69,7 @@ __attribute__((fastcall)) static float do_adsr(enveloppe *e){
   return e->v;
 }
 
-__attribute__((fastcall)) void create_note_instr(note_instr *n, instrument *i, float f, float a){
+__attribute__((fastcall)) void create_note_instr(note_instr *n, instrument *i, int f, int a){
   int os;
   n->used = 1;
   n->instr = i;
@@ -88,14 +79,11 @@ __attribute__((fastcall)) void create_note_instr(note_instr *n, instrument *i, f
               (float)(i->s) / 127.f,
               calc_freq(3.258886363e-3f,1.059463094f,i->r));
   n->freq = f;
-  n->amp = a;
-  os = 2; do create_osc(n->o+os, i->type[os], 
-                        calc_freq(0.024803141f,1.059463094f,i->freqt[os]) * 
-                        calc_freq(0.971531941f,1.000451664f,i->freqf[os]) * f,
-                        (float)(i->amp[os]) / 127.f); while(os--);
-  n->cutoff = calc_freq(16.f, 1.059463094f, i->cutoff);
-  n->res = (float)(i->res) / 127.f;
-  n->f = 1.5f * sin4k(3.141592f * n->cutoff / SAMPLERATE_F);
+  n->amp = (float)(a) / 127.f;
+  os = 2; do create_osc(n->o+os, i->o[os].type, 
+                        calc_freq(0.405570987f,1.059463094f,i->o[os].freqt+f) * 
+                        calc_freq(0.971531941f,1.000451664f,i->o[os].freqf),
+                        (float)(i->o[os].amp) / 127.f); while(os--);
   n->low = n->band = 0.f;
 }
 
@@ -104,14 +92,15 @@ __attribute__((fastcall)) float do_note_instr(note_instr *n){
   float out = 0.f;
   osc *o = n->o;
   if(n->used){
-    e = do_adsr(&(n->env));
-    if(e<=0.f){
+    if((e = do_adsr(&(n->env)))<=0.f){
       n->used = 0;
     } else {
-      out += do_osc(&o[0]);
-      out += do_osc(&o[1]);
-      out += do_osc(&o[2]);
+      register char i=3;
+      do { out += do_osc(o++); } while(--i);
       out *= e * n->amp;
+      n->cutoff = calc_freq(16.f, 1.059463094f, n->instr->cutoff);
+      n->f = 1.5f * sin4k(3.141592f * n->cutoff / SAMPLERATE_F);
+      n->res = (float)(n->instr->res) / 127.f;
       n->low += n->f * n->band;
       float high = n->res * (out - n->band) - n->low;
       n->band += n->f * high;
@@ -128,7 +117,7 @@ void init_synth(){
   do { note[i].used = 0; } while(i--);
 }
 
-void create_note(float freq, float amp, instrument *instr){
+void create_note(int freq, int amp, instrument *instr){
   int i=31;
   do {
     if(!note[i].used){
@@ -138,7 +127,7 @@ void create_note(float freq, float amp, instrument *instr){
   } while(i--);
 }
 
-void release_note(float freq, float amp, instrument *instr){
+void release_note(int freq, int amp, instrument *instr){
   int i=31;
   do {
     if(note[i].used){
