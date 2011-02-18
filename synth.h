@@ -39,6 +39,8 @@ typedef struct _instrument {
   osc_def o[3];  /* 3 osc definitions */
   char cutoff;   /* [0;127] -> [20;SAMPLERATE/4](log) */
   char res;      /* [0;128[ -> [0.f;1.f[ */
+  char reverb_level;
+  char reverb_time;
 } instrument;
 
 typedef struct _note_instr {
@@ -53,6 +55,7 @@ typedef struct _note_instr {
 } note_instr;
 
 void init_synth();
+void update_instr(instrument *instr);
 void create_note(int freq, int amp, instrument *instr);
 void release_note(int freq, int amp, instrument *instr);
 void render_synth(short *audio_buffer, int len);

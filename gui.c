@@ -9,7 +9,8 @@ instrument instr = {
  { { OSC_SAW,64,64,64 },
    { OSC_SAW,64,76,64 },
    { OSC_SAW,64,54,64 } },
- 95, 100         /* cutoff, res */
+ 95, 100,         /* cutoff, res */
+ 30, 100,         /* reverb_level, reverb_time */
 };
 
 __attribute__((fastcall)) static char *my_strchr(char *p,char c){
@@ -51,11 +52,13 @@ __attribute__((fastcall)) static void move_ruler(ruler *rul, int x, int y){
   if((x > rul->x1+1) &&
      (x < rul->x2-1) &&
      (y > rul->y1+1) &&
-     (y < rul->y2-1))
+     (y < rul->y2-1)){
     *(rul->value) = (x - rul->x1 - 2) * (rul->max - rul->min + 1) / (rul->x2 - rul->x1 - 3) - rul->min;
+    update_instr(&instr);
+  }
 }
 
-#define RULERS 18
+#define RULERS 20
 
 void move_rulers(ruler *rul, int x, int y){
   int i=RULERS;
@@ -101,7 +104,9 @@ ruler R[RULERS] = {
   {160,60,291,68,0,127,&(instr.o[1].freqf)},
   {160,70,291,78,0,127,&(instr.o[1].amp)},
   {160,10,291,18,0,127,&(instr.d)},
-  {160,20,291,28,0,127,&(instr.r)}
+  {160,20,291,28,0,127,&(instr.r)},
+  {160,140,291,148,0,127,&(instr.reverb_level)},
+  {160,150,291,158,0,127,&(instr.reverb_time)}
 };
 
 static void draw_gui(){

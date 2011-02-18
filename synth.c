@@ -109,9 +109,20 @@ __attribute__((fastcall)) float do_note_instr(note_instr *n){
 
 note_instr note[32];
 
+float reverb[SAMPLERATE];
+int reverb_pos = 0;
+int reverb_max = 0;
+float reverb_level = 0.F;
+
 void init_synth(){
   register int i=31;
   do { note[i].used = 0; } while(i--);
+}
+
+void update_instr(instrument *instr){
+  reverb_max = instr->reverb_time * SAMPLERATE / 127;
+  if(reverb_pos >= reverb_max) reverb_pos = 0;
+  reverb_level = instr->reverb_level / 127.F;
 }
 
 void create_note(int freq, int amp, instrument *instr){
@@ -151,6 +162,9 @@ void render_synth(short *audio_buffer, int len){
     do {
       out += do_note_instr(note+i);
     } while(i--);
+    out += reverb[reverb_pos] * reverb_level;
+    reverb[reverb_pos] = out;
+    if((++reverb_pos)>= reverb_max) reverb_pos=0;
     sh = *(sp++) = (short)(out * 32767.f);
     *(sp++) = sh;
   } while(--len);
