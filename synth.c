@@ -38,7 +38,7 @@ __attribute__((fastcall)) static float do_osc(osc *o){
   if(o->type==OSC_TRIANGLE)    out = (o->ph < .5f) ? (4.f * o->ph - 1.f) : (-4.f * o->ph + 3.f);
   else if(o->type==OSC_SAW)    out = 2.f * o->ph - 1.f;
   else if(o->type==OSC_SQUARE) out = (o->ph < .5f) ? -1.f : 1.f;
-  else if(o->type==OSC_NOISE)  out = my_rand();
+  else                         out = my_rand();
   out *= o->amp;
   return out;
 }
