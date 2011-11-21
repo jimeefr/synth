@@ -54,6 +54,9 @@ typedef struct _note_instr {
   float f,low,band; /* filter */
 } note_instr;
 
+extern float scope[];
+extern int scope_pos;
+
 void init_synth();
 void update_instr(instrument *instr);
 void create_note(int freq, int amp, instrument *instr);

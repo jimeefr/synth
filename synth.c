@@ -150,7 +150,8 @@ void release_note(int freq, int amp, instrument *instr){
     n++;
   } while(i--);
 }
-
+float scope[SAMPLERATE];
+int scope_pos=0;
 void render_synth(short *audio_buffer, int len){
   int i;
   float out;
@@ -167,5 +168,6 @@ void render_synth(short *audio_buffer, int len){
     if((++reverb_pos)>= reverb_max) reverb_pos=0;
     sh = *(sp++) = (short)(out * 32767.f);
     *(sp++) = sh;
+    scope[scope_pos++] = out; if(scope_pos >= SAMPLERATE) scope_pos = 0;
   } while(--len);
 }

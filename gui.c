@@ -145,6 +145,7 @@ void bind_rulers(ruler r[], instrument *i){
 }
 
 static void draw_gui(){
+  int sc_p = scope_pos, i;
   glClear(GL_COLOR_BUFFER_BIT);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
@@ -153,6 +154,13 @@ static void draw_gui(){
   glLoadIdentity();
 
   draw_rulers(R);
+  glBegin(GL_POINT);
+  i=320;
+  while(--i >= 0){
+    if(--sc_p < 0) sc_p += SAMPLERATE;
+    glVertex2i(i,(int)(scope[sc_p] * 100.f) + 200);
+  } 
+  glEnd();
   SDL_GL_SwapBuffers();
 }
 
