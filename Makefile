@@ -1,7 +1,8 @@
 CFLAGS=-Os -Wall
 
 main: main.o synth.o gui.o
-	ld -dynamic-linker /lib/ld-linux.so.2 main.o synth.o gui.o /usr/lib/libSDL.so /usr/lib/libGL.so /usr/lib/libGLU.so -o main
+	ld -dynamic-linker /lib/ld-linux.so.2 main.o synth.o gui.o -lSDL -lGL -lGLU -o main
+	@echo "unstripped size: " `wc -c main`
 	@strip -s -R .comment -R .gnu.version main >/dev/null
 	@echo "uncompressed size: " `wc -c main`
 	@7z a -tGZip -mx=9 main.gz main >/dev/null
