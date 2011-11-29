@@ -1,6 +1,7 @@
 CFLAGS=-Os -Wall
 
 main: main.o synth.o gui.o
+	@echo "synth size: " `wc -c synth.o`
 	ld -dynamic-linker /lib/ld-linux.so.2 main.o synth.o gui.o -lSDL -lGL -lGLU -o main
 	@echo "unstripped size: " `wc -c main`
 	@strip -s -R .comment -R .gnu.version main >/dev/null

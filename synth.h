@@ -13,15 +13,14 @@ typedef enum {
 } osc_type;
 
 typedef struct _osc {
-  osc_type type;
+  float (*osc)(float);
   float ph;         /* phase [0;1[ */
-  float freq;
   float iph;        /* incr_pĥase = freq / SAMPLERATE */
   float amp;        /* amplitude [0;1[ */
 } osc;
 
 typedef struct _enveloppe {
-  float a,d,s,r;
+  float a,s;
   float ad,da,dd,dr;
   float v,t;
   int on;
