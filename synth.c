@@ -14,12 +14,19 @@ __attribute__((fastcall)) static float my_rand()
 }
 
 __attribute((fastcall)) static float my_pow(float x, float y){
-  float res;
-  asm("flds %2; flds %1; fyl2x; fld %%st; frndint; fsubr %%st,%%st(1); fxch %%st(1); f2xm1;"
-      "fld1; faddp; fscale; fstps %0; fstp %%st;"
-      : "=m" (res) 
-      : "m" (x), "m" (y) 
-      : "eax");
+  float res; int cw;
+  asm(/*"flds %2; flds %1;"*/
+      "fyl2x;"
+      "fld %%st; frndint;"
+      "fsubr %%st,%%st(1);"
+      "fxch %%st(1); f2xm1;"
+      "fld1; faddp; fscale;"
+      "fstps %0; fstp %%st;"
+      : "=m" (res)
+      : "t" (x),
+        "u" (y),
+        "m" (cw)
+      : "st","st(1)");
   return res;
 }
 
@@ -54,22 +61,24 @@ __attribute__((fastcall)) static float do_osc(osc *o){
 }
 
 __attribute__((fastcall)) static void create_adsr(enveloppe *e, float a, float d, float s, float r){
+  a += DT; d += DT; r += DT;
   e->v = MIN_VOLUME;
   e->t = 0.f;
   e->a = a;
   e->s = s;
   e->ad = a+d;
-  e->da = (a > 0.f) ? my_pow(1.f / MIN_VOLUME, DT / a) : 1.f / MIN_VOLUME;
-  e->dd = (d > 0.f) ? my_pow(s, DT / d) : s;
-  e->dr = (r > 0.f) ? my_pow(MIN_VOLUME / s, DT / r) : 0.f;
+  e->da = my_pow(1.f / MIN_VOLUME, DT / a);
+  e->dd = my_pow(s, DT / d);
+  //e->dr = (r > 0.f) ? my_pow(MIN_VOLUME / s, DT / r) : 0.f;
+  e->dr = my_pow(MIN_VOLUME / s, DT / r);
   ++e->on;
 }
 
 __attribute__((fastcall)) static float do_adsr(enveloppe *e){
   if(e->t < e->a) e->v *= e->da;
-  else if((e->t - e->a) < DT) e->v = 1.f;
+  // else if((e->t - e->a) < DT) e->v = 1.f;
   else if(e->t < e->ad) e->v *= e->dd;
-  else if(e->on) e->v = e->s;
+  else if(e->on) /* e->v = e->s */ ;
   else e->v *= e->dr;
   e->t += DT;
   return e->v;
@@ -128,7 +137,7 @@ void init_synth(){
 void update_instr(instrument *instr){
   reverb_max = instr->reverb_time * SAMPLERATE / 127;
   if(reverb_pos >= reverb_max) reverb_pos = 0;
-  reverb_level = instr->reverb_level / 127.F;
+  reverb_level = my_pow(MIN_VOLUME * 8.f, 1.f - (float)instr->reverb_level / 127.f);
 }
 
 void create_note(int freq, int amp, instrument *instr){
