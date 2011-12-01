@@ -14,17 +14,17 @@ __attribute__((fastcall)) static float my_rand()
 }
 
 __attribute((fastcall)) static float my_pow(float x, float y){
-  float res; int cw;
+  float res;
   asm("fyl2x;"
       "fld %%st; frndint;"
       "fsubr %%st,%%st(1);"
       "fxch %%st(1); f2xm1;"
       "fld1; faddp; fscale;"
+      //"fstp %%st(1);"
       "fstps %0; fstp %%st;"
       : "=m" (res)
       : "t" (x),
-        "u" (y),
-        "m" (cw)
+        "u" (y)
       : "st","st(1)");
   return res;
 }
@@ -36,7 +36,7 @@ __attribute((fastcall)) static float calc_freq(float base, float interval, int n
 /* sin(2 * PI * f) */
 __attribute__((fastcall)) static float sin4k(float f){
   float res;
-  asm ("fldpi; fld1; fld1; faddp; fmulp; fmulp; fsin; fstp %0;" : "=m" (res) : "t" (f) : "st");
+  asm ("fldpi; fld1; fld1; faddp; fmulp; fmulp; fsin;" : "=t" (res) : "0" (f));
   return res;
 }
 
@@ -75,8 +75,7 @@ __attribute__((fastcall)) static void create_adsr(enveloppe *e, float a, float d
 __attribute__((fastcall)) static float do_adsr(enveloppe *e){
   if(e->t < e->a) e->v *= e->da;
   else if(e->t < e->ad) e->v *= e->dd;
-  else if(e->on) /* e->v = e->s */ ;
-  else e->v *= e->dr;
+  else if(!e->on) e->v *= e->dr;
   e->t += DT;
   return e->v;
 }
