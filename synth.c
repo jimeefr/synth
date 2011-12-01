@@ -36,7 +36,7 @@ __attribute((fastcall)) static float calc_freq(float base, float interval, int n
 /* sin(2 * PI * f) */
 __attribute__((fastcall)) static float sin4k(float f){
   float res;
-  asm ("fld %1; fldpi; fld1; fld1; faddp; fmulp; fmulp; fsin; fstp %0;" : "=m" (res) : "m" (f));
+  asm ("fldpi; fld1; fld1; faddp; fmulp; fmulp; fsin; fstp %0;" : "=m" (res) : "t" (f) : "st");
   return res;
 }
 
