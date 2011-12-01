@@ -15,8 +15,7 @@ __attribute__((fastcall)) static float my_rand()
 
 __attribute((fastcall)) static float my_pow(float x, float y){
   float res; int cw;
-  asm(/*"flds %2; flds %1;"*/
-      "fyl2x;"
+  asm("fyl2x;"
       "fld %%st; frndint;"
       "fsubr %%st,%%st(1);"
       "fxch %%st(1); f2xm1;"
@@ -69,14 +68,12 @@ __attribute__((fastcall)) static void create_adsr(enveloppe *e, float a, float d
   e->ad = a+d;
   e->da = my_pow(1.f / MIN_VOLUME, DT / a);
   e->dd = my_pow(s, DT / d);
-  //e->dr = (r > 0.f) ? my_pow(MIN_VOLUME / s, DT / r) : 0.f;
   e->dr = my_pow(MIN_VOLUME / s, DT / r);
   ++e->on;
 }
 
 __attribute__((fastcall)) static float do_adsr(enveloppe *e){
   if(e->t < e->a) e->v *= e->da;
-  // else if((e->t - e->a) < DT) e->v = 1.f;
   else if(e->t < e->ad) e->v *= e->dd;
   else if(e->on) /* e->v = e->s */ ;
   else e->v *= e->dr;
