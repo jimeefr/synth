@@ -5,12 +5,12 @@
 #include <GL/glu.h>
 
 instrument instr1 = {
- 19, 59 , 127, 99, /* a,d,s,r */
- { { OSC_SAW,64,64,64 },
-   { OSC_SAW,64,76,64 },
-   { OSC_SAW,64,54,64 } },
- 95, 100,         /* cutoff, res */
- 30, 100,         /* reverb_level, reverb_time */
+ 5, 16 , 127, 32, /* a,d,s,r */
+ { { OSC_SAW,64,64,96 },
+   { OSC_SAW,64,76,96 },
+   { OSC_SAW,64,54,96 } },
+ 82, 100,         /* cutoff, res */
+ 96, 64,         /* reverb_level, reverb_time */
 };
 
 instrument instr2 = {
@@ -198,6 +198,7 @@ static void gui_check_event(){
       else if(event.key.keysym.sym == SDLK_F2) octave++;
       else if(event.key.keysym.sym == SDLK_F3) select_instr(&instr1);
       else if(event.key.keysym.sym == SDLK_F4) select_instr(&instr2);
+      else if(event.key.keysym.sym == SDLK_LESS) init_synth();
       else if((p=my_strchr(keymap,event.key.keysym.sym))) 
         create_note(octave*12+notetable[p-keymap],20,instr);
     } else if(event.type == SDL_KEYUP){
