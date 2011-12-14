@@ -6,18 +6,20 @@
 
 instrument instr1 = {
  5, 16 , 127, 32, /* a,d,s,r */
- { { OSC_SAW,64,64,96 },
-   { OSC_SAW,64,76,96 },
-   { OSC_SAW,64,54,96 } },
+ { OSC_SAW, OSC_SAW, OSC_SAW }, /* osc_type */
+ { 64, 64, 64 }, /* transpose */
+ { 64, 76, 54 }, /* finetune */
+ { 96, 96, 96 }, /* amplitude */
  82, 100,         /* cutoff, res */
  96, 64,         /* reverb_level, reverb_time */
 };
 
 instrument instr2 = {
  19, 59 , 127, 99, /* a,d,s,r */
- { { OSC_SAW,64,64,64 },
-   { OSC_SAW,64,76,64 },
-   { OSC_SAW,64,54,64 } },
+ { OSC_SAW, OSC_SAW, OSC_SAW }, /* osc_type */
+ { 64, 64, 64 }, /* transpose */
+ { 64, 76, 54 }, /* finetune */
+ { 64, 64, 64 }, /* amplitude */
  95, 100,         /* cutoff, res */
  30, 100,         /* reverb_level, reverb_time */
 };
@@ -124,20 +126,20 @@ ruler R[RULERS] = {
 void bind_rulers(ruler r[], instrument *i){
   r[0].value = &(i->a);
   r[1].value = &(i->s);
-  r[2].value = (char *)&(i->o[0].type);
-  r[3].value = &(i->o[0].freqt);
-  r[4].value = &(i->o[0].freqf);
-  r[5].value = &(i->o[0].amp);
-  r[6].value = (char *)&(i->o[2].type);
-  r[7].value = &(i->o[2].freqt);
-  r[8].value = &(i->o[2].freqf);
-  r[9].value = &(i->o[2].amp);
+  r[2].value = (char *)&(i->type[0]);
+  r[3].value = &(i->freqt[0]);
+  r[4].value = &(i->freqf[0]);
+  r[5].value = &(i->amp[0]);
+  r[6].value = (char *)&(i->type[2]);
+  r[7].value = &(i->freqt[2]);
+  r[8].value = &(i->freqf[2]);
+  r[9].value = &(i->amp[2]);
   r[10].value = &(i->cutoff);
   r[11].value = &(i->res);
-  r[12].value = (char *)&(i->o[1].type);
-  r[13].value = &(i->o[1].freqt);
-  r[14].value = &(i->o[1].freqf);
-  r[15].value = &(i->o[1].amp);
+  r[12].value = (char *)&(i->type[1]);
+  r[13].value = &(i->freqt[1]);
+  r[14].value = &(i->freqf[1]);
+  r[15].value = &(i->amp[1]);
   r[16].value = &(i->d);
   r[17].value = &(i->r);
   r[18].value = &(i->reverb_level);

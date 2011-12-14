@@ -26,16 +26,12 @@ typedef struct _enveloppe {
   int on;
 } enveloppe;
 
-typedef struct _osc_def {
-  osc_type type;
-  char freqt; /* transpose [0;127] -> [-64;63] */
-  char freqf; /* finetune [0;128[ -> [-1/4t;+1/4t[ */
-  char amp;   /* amplitude [0;127] -> [0.f;1.f](log) */
-} osc_def;
-
 typedef struct _instrument {
   char a,d,s,r;
-  osc_def o[3];  /* 3 osc definitions */
+  osc_type type[3];
+  char freqt[3]; /* transpose [0;127] -> [-64;63] */
+  char freqf[3]; /* finetune [0;128[ -> [-1/4t;+1/4t[ */
+  char amp[3];   /* amplitude [0;127] -> [0.f;1.f](log) */
   char cutoff;   /* [0;127] -> [20;SAMPLERATE/4](log) */
   char res;      /* [0;128[ -> [0.f;1.f[ */
   char reverb_level;

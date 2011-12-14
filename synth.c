@@ -90,9 +90,9 @@ __attribute__((fastcall)) void create_note_instr(note_instr *n, instrument *i, i
               (float) i->r / 16.f);
   n->freq = f;
   n->amp = (float)(a) / 127.f;
-  register int os = 2; do create_osc(n->o+os, i->o[os].type, 
-                        calc_freq(0.197012587, 1.00045137f, 128 * (i->o[os].freqt + f) + i->o[os].freqf),
-                        my_pow(MIN_VOLUME, 1.f - (float)(i->o[os].amp) / 127.f)); while(os--);
+  register int os = 2; do create_osc(n->o+os, i->type[os], 
+                        calc_freq(0.197012587, 1.00045137f, 128 * (i->freqt[os] + f) + i->freqf[os]),
+                        my_pow(MIN_VOLUME, 1.f - (float)(i->amp[os]) / 127.f)); while(os--);
   n->low = n->band = 0.f;
 }
 
