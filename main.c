@@ -31,7 +31,7 @@ void _start(){
   desired.freq=SAMPLERATE;
   desired.format=AUDIO_S16;
   desired.channels=2;
-  desired.samples=1024;
+  desired.samples=512;
   desired.callback=fetch_audio_buffer;
   SDL_Init(SDL_INIT_AUDIO|SDL_INIT_VIDEO);
   if(!SDL_OpenAudio(&desired, &obtained)){
