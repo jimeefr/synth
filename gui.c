@@ -5,23 +5,27 @@
 #include <GL/glu.h>
 
 instrument instr1 = {
- 5, 16 , 127, 32, /* a,d,s,r */
+ 5, 16 , 127, 5, /* a,d,s,r */
  { OSC_SAW, OSC_SAW, OSC_SAW }, /* osc_type */
- { 64, 64, 64 }, /* transpose */
- { 64, 76, 54 }, /* finetune */
+ { 64, 64, 76 }, /* transpose */
+ { 64, 64, 64 }, /* finetune */
  { 96, 96, 96 }, /* amplitude */
+ { 15, 15, 15 },    /* unison */
+ { 32, 32, 32 }, /* dispersion */
  82, 100,         /* cutoff, res */
  96, 64,         /* reverb_level, reverb_time */
 };
 
 instrument instr2 = {
- 19, 59 , 127, 99, /* a,d,s,r */
+ 5, 16 , 127, 5, /* a,d,s,r */
  { OSC_SAW, OSC_SAW, OSC_SAW }, /* osc_type */
- { 64, 64, 64 }, /* transpose */
- { 64, 76, 54 }, /* finetune */
- { 64, 64, 64 }, /* amplitude */
- 95, 100,         /* cutoff, res */
- 30, 100,         /* reverb_level, reverb_time */
+ { 64, 64, 76 }, /* transpose */
+ { 64, 64, 64 }, /* finetune */
+ { 96, 96, 96 }, /* amplitude */
+ { 15, 15, 15 },    /* unison */
+ { 32, 32, 32 }, /* dispersion */
+ 82, 100,         /* cutoff, res */
+ 96, 64,         /* reverb_level, reverb_time */
 };
 
 instrument *instr = &instr1;
@@ -57,7 +61,7 @@ void draw_ruler(ruler *rul){
   glColor3ub(0,0,0);
   rect(x1++,y1++,x2,y2--);
   glColor3ub(255,255,255);
-  if(rul->value) rect(x1,y1,(*(rul->value)-rul->min+1) * (x2-x1-1) / (rul->max-rul->min+1) + x1,y2);
+  if(rul->value) rect(x1,y1,(*(rul->value)-rul->min) * (x2-x1-2) / (rul->max-rul->min) + x1+1,y2);
   glEnd();
 }
 
@@ -67,12 +71,12 @@ __attribute__((fastcall)) static void move_ruler(ruler *rul, int x, int y){
      (x < rul->x2-1) &&
      (y > rul->y1+1) &&
      (y < rul->y2-1)){
-    *(rul->value) = (x - rul->x1 - 2) * (rul->max - rul->min + 1) / (rul->x2 - rul->x1 - 3) - rul->min;
+    *(rul->value) = (x - rul->x1 - 2) * (rul->max - rul->min) / (rul->x2 - rul->x1 - 4) + rul->min;
     update_instr(instr);
   }
 }
 
-#define RULERS 20
+#define RULERS 26
 
 void move_rulers(ruler *rul, int x, int y){
   int i=RULERS;
@@ -107,20 +111,26 @@ ruler R[RULERS] = {
   {14,50,145,58,0,127,NULL},
   {14,60,145,68,0,127,NULL},
   {14,70,145,78,0,127,NULL},
-  {14,90,145,98,0,3,NULL},
-  {14,100,145,108,0,127,NULL},
-  {14,110,145,118,0,127,NULL},
+  {14,110,145,118,0,3,NULL},
   {14,120,145,128,0,127,NULL},
+  {14,130,145,138,0,127,NULL},
   {14,140,145,148,0,127,NULL},
-  {14,150,145,158,0,127,NULL},
+  {14,180,145,188,0,127,NULL},
+  {14,190,145,198,0,127,NULL},
   {174,40,305,48,0,3,NULL},
   {174,50,305,58,0,127,NULL},
   {174,60,305,68,0,127,NULL},
   {174,70,305,78,0,127,NULL},
   {174,10,305,18,0,127,NULL},
   {174,20,305,28,0,127,NULL},
-  {174,140,305,148,0,127,NULL},
-  {174,150,305,158,0,127,NULL}
+  {174,180,305,188,0,127,NULL},
+  {174,190,305,198,0,127,NULL},
+  {14,80,145,88,0,15,NULL},
+  {14,150,145,158,0,15,NULL},
+  {174,80,305,88,0,15,NULL},
+  {14,90,145,98,0,127,NULL},
+  {14,160,145,168,0,127,NULL},
+  {174,90,305,98,0,127,NULL}
 };
 
 void bind_rulers(ruler r[], instrument *i){
@@ -144,6 +154,13 @@ void bind_rulers(ruler r[], instrument *i){
   r[17].value = &(i->r);
   r[18].value = &(i->reverb_level);
   r[19].value = &(i->reverb_time);
+  r[20].value = &(i->unison[0]);
+  r[21].value = &(i->unison[2]);
+  r[22].value = &(i->unison[1]);
+  r[23].value = &(i->disper[0]);
+  r[24].value = &(i->disper[2]);
+  r[25].value = &(i->disper[1]);
+  update_instr(instr);
 }
 
 static void draw_gui(){
@@ -156,13 +173,18 @@ static void draw_gui(){
   glLoadIdentity();
 
   draw_rulers(R);
-  glBegin(GL_POINT);
+  glPointSize(4.f);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+  glBegin(GL_POINTS);
+  glColor4ub(255,0,0,127);
   i=320;
   while(--i >= 0){
     if(--sc_p < 0) sc_p += SAMPLERATE;
-    glVertex2i(i,(int)(scope[sc_p] * 100.f) + 200);
+    glVertex2i(i,120 - (int)(scope[sc_p] * 120.f));
   } 
   glEnd();
+  glDisable(GL_BLEND);
   SDL_GL_SwapBuffers();
 }
 

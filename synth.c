@@ -3,14 +3,16 @@
 
 #define HALFTONE 1.059463094f
 #define NOTES 32
-#define MIN_VOLUME (1.f / 128.f)
+#define MIN_VOLUME (1.f / 256.f)
 
-static unsigned int my_seed = 32627;
+static int my_seed = 32627;
 
 __attribute__((fastcall)) static float my_rand()
 {
+  union { float f; unsigned int i; } res;
   my_seed *= 16807;
-  return ((float)my_seed) / (float)0x80000000;
+  res.i = (((unsigned int)my_seed) >> 9) | 0x40000000;
+  return res.f - 3.f;
 }
 
 __attribute((fastcall)) static float my_pow(float x, float y){
@@ -50,7 +52,7 @@ float (*osc_table[])(float) = { &do_osc_tri, &do_osc_saw, &do_osc_sqr, &do_osc_n
 __attribute__((fastcall)) static void create_osc(osc *o, osc_type t, float f, float a){
   o->osc  = osc_table[t];
   o->amp  = a;
-  o->ph   = 0.f;
+  o->ph   = my_rand();
   o->iph  = f * DT;
 }
 
@@ -90,9 +92,16 @@ __attribute__((fastcall)) void create_note_instr(note_instr *n, instrument *i, i
               (float) i->r / 16.f);
   n->freq = f;
   n->amp = (float)(a) / 127.f;
-  register int os = 2; do create_osc(n->o+os, i->type[os], 
-                        calc_freq(0.197012587, 1.00045137f, 128 * (i->freqt[os] + f) + i->freqf[os]),
-                        my_pow(MIN_VOLUME, 1.f - (float)(i->amp[os]) / 127.f)); while(os--);
+  n->nos = 0; 
+  int os=2; do {
+    int unison = i->unison[os];
+    if(i->amp[os]) do {
+      create_osc(n->o+n->nos, i->type[os], 
+                 0.197012587 * my_pow(1.00045137f, 128.f * (i->freqt[os] + f) + i->disper[os] * my_rand() + i->freqf[os]),
+                 my_pow(MIN_VOLUME, 1.f - (float)(i->amp[os]) / 127.f)); 
+      n->nos++;
+    } while(unison--);
+  } while(os--);
   n->low = n->band = 0.f;
 }
 
@@ -103,7 +112,7 @@ __attribute__((fastcall)) float do_note_instr(note_instr *n){
     if((e = do_adsr(&(n->env))) <= MIN_VOLUME){
       --n->used;
     } else {
-      int i=3;
+      int i=n->nos;
       while(i--) out += do_osc(n->o+i);
       out *= e * n->amp;
       n->cutoff = calc_freq(16.f, HALFTONE, n->instr->cutoff);
@@ -178,6 +187,8 @@ void render_synth(short *audio_buffer, int len){
       reverb[reverb_pos++] = out;
       reverb_pos %= reverb_max;
     }
+    if(out<-1.f) out=-1.f;
+    if(out> 1.f) out= 1.f;
     sh = *(sp++) = (short)(out * 32767.f);
     *(sp++) = sh;
     scope[scope_pos++] = out; scope_pos %= SAMPLERATE;

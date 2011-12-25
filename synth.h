@@ -32,6 +32,8 @@ typedef struct _instrument {
   char freqt[3]; /* transpose [0;127] -> [-64;63] */
   char freqf[3]; /* finetune [0;128[ -> [-1/4t;+1/4t[ */
   char amp[3];   /* amplitude [0;127] -> [0.f;1.f](log) */
+  char unison[3];
+  char disper[3];
   char cutoff;   /* [0;127] -> [20;SAMPLERATE/4](log) */
   char res;      /* [0;128[ -> [0.f;1.f[ */
   char reverb_level;
@@ -44,7 +46,8 @@ typedef struct _note_instr {
   enveloppe env;
   int freq;
   float amp;
-  osc o[3];
+  int nos;
+  osc o[48];
   float cutoff,res;
   float f,low,band; /* filter */
 } note_instr;
