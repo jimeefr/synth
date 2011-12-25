@@ -10,9 +10,9 @@ instrument instr1 = {
  { 64, 64, 76 }, /* transpose */
  { 64, 64, 64 }, /* finetune */
  { 96, 96, 96 }, /* amplitude */
- { 15, 15, 15 },    /* unison */
+ { 15, 15, 15 }, /* unison */
  { 32, 32, 32 }, /* dispersion */
- 82, 100,         /* cutoff, res */
+ 82, 100,        /* cutoff, res */
  96, 64,         /* reverb_level, reverb_time */
 };
 
@@ -22,9 +22,9 @@ instrument instr2 = {
  { 64, 64, 76 }, /* transpose */
  { 64, 64, 64 }, /* finetune */
  { 96, 96, 96 }, /* amplitude */
- { 15, 15, 15 },    /* unison */
+ { 15, 15, 15 }, /* unison */
  { 32, 32, 32 }, /* dispersion */
- 82, 100,         /* cutoff, res */
+ 82, 100,        /* cutoff, res */
  96, 64,         /* reverb_level, reverb_time */
 };
 
@@ -53,25 +53,26 @@ __attribute__((fastcall)) static void rect(int x1,int y1,int x2,int y2){
 
 void draw_ruler(ruler *rul){
   int x1,y1,x2,y2;
-  x1 = rul->x1; x2 = rul->x2+1;
-  y1 = rul->y1; y2 = rul->y2+1;
+  x1 = rul->x1 - 2; x2 = rul->x2 + 3;
+  y1 = rul->y1 - 2; y2 = rul->y2 + 3;
   glBegin(GL_QUADS);
   glColor3ub(255,255,255);
   rect(x1++,y1++,x2--,y2--);
   glColor3ub(0,0,0);
-  rect(x1++,y1++,x2,y2--);
+  rect(x1++,y1++,x2--,y2--);
   glColor3ub(255,255,255);
-  if(rul->value) rect(x1,y1,(*(rul->value)-rul->min) * (x2-x1-2) / (rul->max-rul->min) + x1+1,y2);
+  if(rul->value) rect(x1,y1,(*(rul->value)-rul->min) * (x2-x1-1) / (rul->max-rul->min) + x1+1,y2);
   glEnd();
 }
 
 __attribute__((fastcall)) static void move_ruler(ruler *rul, int x, int y){
   if(!rul->value) return;
-  if((x > rul->x1+1) &&
-     (x < rul->x2-1) &&
-     (y > rul->y1+1) &&
-     (y < rul->y2-1)){
-    *(rul->value) = (x - rul->x1 - 2) * (rul->max - rul->min) / (rul->x2 - rul->x1 - 4) + rul->min;
+  if((x >= rul->x1) &&
+     (x <= rul->x2) &&
+     (y >= rul->y1) &&
+     (y <= rul->y2)){
+    int dx = rul->x2 - rul->x1;
+    *(rul->value) = ((x - rul->x1) * (rul->max - rul->min) + (dx >> 1)) / dx + rul->min;
     update_instr(instr);
   }
 }
@@ -94,10 +95,10 @@ static void draw_rulers(ruler *rul){
 
 /*
 static void create_ruler(ruler *rul,int x1, int y1, int x2, int y2, char min, char max, char *val){
-  rul->x1=x1;
-  rul->x2=x2;
-  rul->y1=y1;
-  rul->y2=y2;
+  rul->x1=x1+2;
+  rul->x2=x2-2;
+  rul->y1=y1+2;
+  rul->y2=y2-2;
   rul->min=min;
   rul->max=max;
   rul->value=val;
@@ -105,32 +106,32 @@ static void create_ruler(ruler *rul,int x1, int y1, int x2, int y2, char min, ch
 */
 
 ruler R[RULERS] = {
-  {14,10,145,18,0,127,NULL},
-  {14,20,145,28,0,127,NULL},
-  {14,40,145,48,0,3,NULL},
-  {14,50,145,58,0,127,NULL},
-  {14,60,145,68,0,127,NULL},
-  {14,70,145,78,0,127,NULL},
-  {14,110,145,118,0,3,NULL},
-  {14,120,145,128,0,127,NULL},
-  {14,130,145,138,0,127,NULL},
-  {14,140,145,148,0,127,NULL},
-  {14,180,145,188,0,127,NULL},
-  {14,190,145,198,0,127,NULL},
-  {174,40,305,48,0,3,NULL},
-  {174,50,305,58,0,127,NULL},
-  {174,60,305,68,0,127,NULL},
-  {174,70,305,78,0,127,NULL},
-  {174,10,305,18,0,127,NULL},
-  {174,20,305,28,0,127,NULL},
-  {174,180,305,188,0,127,NULL},
-  {174,190,305,198,0,127,NULL},
-  {14,80,145,88,0,15,NULL},
-  {14,150,145,158,0,15,NULL},
-  {174,80,305,88,0,15,NULL},
-  {14,90,145,98,0,127,NULL},
-  {14,160,145,168,0,127,NULL},
-  {174,90,305,98,0,127,NULL}
+  {16,12,143,16,0,127,NULL},
+  {16,22,143,26,0,127,NULL},
+  {16,42,143,46,0,3,NULL},
+  {16,52,143,56,0,127,NULL},
+  {16,62,143,66,0,127,NULL},
+  {16,72,143,76,0,127,NULL},
+  {16,112,143,116,0,3,NULL},
+  {16,122,143,126,0,127,NULL},
+  {16,132,143,136,0,127,NULL},
+  {16,142,143,146,0,127,NULL},
+  {16,182,143,186,0,127,NULL},
+  {16,192,143,196,0,127,NULL},
+  {176,42,303,46,0,3,NULL},
+  {176,52,303,56,0,127,NULL},
+  {176,62,303,66,0,127,NULL},
+  {176,72,303,76,0,127,NULL},
+  {176,12,303,16,0,127,NULL},
+  {176,22,303,26,0,127,NULL},
+  {176,182,303,186,0,127,NULL},
+  {176,192,303,196,0,127,NULL},
+  {16,82,143,86,0,15,NULL},
+  {16,152,143,156,0,15,NULL},
+  {176,82,303,86,0,15,NULL},
+  {16,92,143,96,0,127,NULL},
+  {16,162,143,166,0,127,NULL},
+  {176,92,303,96,0,127,NULL}
 };
 
 void bind_rulers(ruler r[], instrument *i){
