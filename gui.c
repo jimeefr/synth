@@ -44,25 +44,15 @@ typedef struct _ruler {
   char *value;
 } ruler;
 
-__attribute__((fastcall)) static void rect(int x1,int y1,int x2,int y2){
-  glVertex2i(x1,y1);
-  glVertex2i(x1,y2);
-  glVertex2i(x2,y2);
-  glVertex2i(x2,y1);
-}
-
 void draw_ruler(ruler *rul){
   int x1,y1,x2,y2;
-  x1 = rul->x1 - 2; x2 = rul->x2 + 3;
-  y1 = rul->y1 - 2; y2 = rul->y2 + 3;
-  glBegin(GL_QUADS);
+  x1 = rul->x1; x2 = rul->x2 + 1;
+  y1 = rul->y1; y2 = rul->y2 + 1;
   glColor3ub(255,255,255);
-  rect(x1++,y1++,x2--,y2--);
-  glColor3ub(0,0,0);
-  rect(x1++,y1++,x2--,y2--);
-  glColor3ub(255,255,255);
-  if(rul->value) rect(x1,y1,(*(rul->value)-rul->min) * (x2-x1-1) / (rul->max-rul->min) + x1+1,y2);
-  glEnd();
+  glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+  glRecti(x1-1,y2+2,x2+2,y1-1);
+  glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+  if(rul->value) glRecti(x1,y1,(*(rul->value)-rul->min) * (x2-x1-1) / (rul->max-rul->min) + x1+1,y2);
 }
 
 __attribute__((fastcall)) static void move_ruler(ruler *rul, int x, int y){
