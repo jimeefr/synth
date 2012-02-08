@@ -7,7 +7,16 @@
 
 static int my_seed = 32627;
 
-__attribute__((fastcall)) static float my_rand()
+static note_instr note[NOTES];
+
+static float reverb[SAMPLERATE];
+static int reverb_pos = 0;
+static int reverb_max = 0;
+static float reverb_level = 0.F;
+float scope[SAMPLERATE];
+int scope_pos=0;
+
+__attribute__((noinline)) static float my_rand()
 {
   union { float f; unsigned int i; } res;
   my_seed *= 16807;
@@ -15,7 +24,7 @@ __attribute__((fastcall)) static float my_rand()
   return res.f - 3.f;
 }
 
-__attribute((fastcall)) static float my_pow(float x, float y){
+__attribute((noinline)) static float my_pow(float x, float y){
   float res;
   asm("fyl2x;"
       "fld %%st; frndint;"
@@ -31,37 +40,67 @@ __attribute((fastcall)) static float my_pow(float x, float y){
   return res;
 }
 
-__attribute((fastcall)) static float calc_freq(float base, float interval, int nint){
-  return base * my_pow(interval, (float) nint);
-}
-
 /* sin(2 * PI * f) */
-__attribute__((fastcall)) static float sin4k(float f){
+__attribute__((noinline)) static float sin4k(float f){
   float res;
   asm ("fldpi; fld1; fld1; faddp; fmulp; fmulp; fsin;" : "=t" (res) : "0" (f));
   return res;
 }
 
-float do_osc_tri(float ph){ return sin4k(ph); }
-float do_osc_saw(float ph){ return 2.f * ph - 1.f; }
-float do_osc_sqr(float ph){ if(ph < .5f) return -1.f; return 1.f; }
-float do_osc_nse(float ph){ return my_rand(); }
+#define do_osc_tri sin4k
+__attribute__((noinline)) static float do_osc_saw(float ph){ return 2.f * ph - 1.f; }
+__attribute__((noinline)) static float do_osc_sqr(float ph){ if(ph < .5f) return -1.f; return 1.f; }
+__attribute__((noinline)) static float do_osc_nse(float ph){ return my_rand(); }
 
-float (*osc_table[])(float) = { &do_osc_tri, &do_osc_saw, &do_osc_sqr, &do_osc_nse };
+static float (*osc_table[])(float) = { do_osc_tri, do_osc_saw, do_osc_sqr, do_osc_nse };
 
-__attribute__((fastcall)) static void create_osc(osc *o, osc_type t, float f, float a){
-  o->osc  = osc_table[t];
-  o->amp  = a;
-  o->ph   = my_rand();
-  o->iph  = f * DT;
-}
-
-__attribute__((fastcall)) static float do_osc(osc *o){
+__attribute__((always_inline)) static float do_osc(osc *o){
   if((o->ph += o->iph) >= 1.f) o->ph -= 1.f;
   return o->osc(o->ph) * o->amp;
 }
 
-__attribute__((fastcall)) static void create_adsr(enveloppe *e, float a, float d, float s, float r){
+static float do_adsr(enveloppe *e){
+  if(e->t < e->a) e->v *= e->da;
+  else if(e->t < e->ad) e->v *= e->dd;
+  else if(!e->on) e->v *= e->dr;
+  e->t += DT;
+  return e->v;
+}
+
+float do_note_instr(note_instr *n){
+  float e;
+  float out = 0.f;
+  if(n->used){
+    if((e = do_adsr(&(n->env))) <= MIN_VOLUME){
+      --n->used;
+    } else {
+      int i=n->nos-1;
+      do { out += do_osc(n->o+i); } while(i--);
+      out *= e * n->amp;
+      n->cutoff = 16.f * my_pow(HALFTONE, (float) n->instr->cutoff);
+      n->f = 1.5f * sin4k(n->cutoff * DT / 2.0f);
+      n->res = (float)(n->instr->res) / 127.f;
+      n->low += n->f * n->band;
+      float high = n->res * (out - n->band) - n->low;
+      n->band += n->f * high;
+      out = n->low;
+    }
+  }
+  return out;
+}
+
+void init_synth(){
+  register int i=NOTES - 1;
+  do { note[i].used = 0; } while(i--);
+}
+
+void update_instr(instrument *instr){
+  reverb_max = instr->reverb_time * SAMPLERATE / 127;
+  if(reverb_pos >= reverb_max) reverb_pos = 0;
+  reverb_level = my_pow(MIN_VOLUME * 8.f, 1.f - (float)instr->reverb_level / 127.f);
+}
+
+__attribute__((always_inline)) static void create_adsr(enveloppe *e, float a, float d, float s, float r){
   a += DT; d += DT; r += DT;
   e->v = MIN_VOLUME;
   e->t = 0.f;
@@ -74,15 +113,14 @@ __attribute__((fastcall)) static void create_adsr(enveloppe *e, float a, float d
   ++e->on;
 }
 
-__attribute__((fastcall)) static float do_adsr(enveloppe *e){
-  if(e->t < e->a) e->v *= e->da;
-  else if(e->t < e->ad) e->v *= e->dd;
-  else if(!e->on) e->v *= e->dr;
-  e->t += DT;
-  return e->v;
+__attribute__((always_inline)) static void create_osc(osc *o, osc_type t, float f, float a){
+  o->osc  = osc_table[t];
+  o->amp  = a;
+  o->ph   = my_rand();
+  o->iph  = f * DT;
 }
 
-__attribute__((fastcall)) void create_note_instr(note_instr *n, instrument *i, int f, int a){
+__attribute__((always_inline)) static void create_note_instr(note_instr *n, instrument *i, int f, int a){
   ++n->used;
   n->instr = i;
   create_adsr(&(n->env),
@@ -103,46 +141,6 @@ __attribute__((fastcall)) void create_note_instr(note_instr *n, instrument *i, i
     } while(unison--);
   } while(os--);
   n->low = n->band = 0.f;
-}
-
-__attribute__((fastcall)) float do_note_instr(note_instr *n){
-  float e;
-  float out = 0.f;
-  if(n->used){
-    if((e = do_adsr(&(n->env))) <= MIN_VOLUME){
-      --n->used;
-    } else {
-      int i=n->nos;
-      while(i--) out += do_osc(n->o+i);
-      out *= e * n->amp;
-      n->cutoff = calc_freq(16.f, HALFTONE, n->instr->cutoff);
-      n->f = 1.5f * sin4k(n->cutoff * DT / 2.0f);
-      n->res = (float)(n->instr->res) / 127.f;
-      n->low += n->f * n->band;
-      float high = n->res * (out - n->band) - n->low;
-      n->band += n->f * high;
-      out = n->low;
-    }
-  }
-  return out;
-}
-
-note_instr note[NOTES];
-
-float reverb[SAMPLERATE];
-int reverb_pos = 0;
-int reverb_max = 0;
-float reverb_level = 0.F;
-
-void init_synth(){
-  register int i=NOTES - 1;
-  do { note[i].used = 0; } while(i--);
-}
-
-void update_instr(instrument *instr){
-  reverb_max = instr->reverb_time * SAMPLERATE / 127;
-  if(reverb_pos >= reverb_max) reverb_pos = 0;
-  reverb_level = my_pow(MIN_VOLUME * 8.f, 1.f - (float)instr->reverb_level / 127.f);
 }
 
 void create_note(int freq, int amp, instrument *instr){
@@ -169,8 +167,7 @@ void release_note(int freq, int amp, instrument *instr){
     n++;
   }
 }
-float scope[SAMPLERATE];
-int scope_pos=0;
+
 void render_synth(short *audio_buffer, int len){
   int i;
   float out;

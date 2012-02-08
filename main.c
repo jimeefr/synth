@@ -7,7 +7,7 @@ void fetch_audio_buffer(void *userdata, Uint8 *stream, int len){
 }
 
 #ifdef DEBUG
-inline void echo(char *s,int l){
+__attribute__((always_inline)) static void echo(char *s,int l){
   asm("mov $4,%%eax\n"
       "mov $1,%%ebx\n"
       "int $0x80\n"

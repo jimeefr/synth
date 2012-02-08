@@ -4,6 +4,12 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
+typedef struct _ruler {
+  short x1,y1,x2,y2;
+  char min, max;
+  char *value;
+} ruler;
+
 instrument instr1 = {
  5, 16 , 127, 5, /* a,d,s,r */
  { OSC_SAW, OSC_SAW, OSC_SAW }, /* osc_type */
@@ -30,7 +36,17 @@ instrument instr2 = {
 
 instrument *instr = &instr1;
 
-__attribute__((fastcall)) static char *my_strchr(char *p,char c){
+int fini = 0;
+char octave = 4;
+char keymap[] = 
+  "wsxdcvgbhnj,;l:m!"
+  "a\xe9z\"er(t-y\xe8ui\xe7o\xe0p^=$";
+char notetable[] = {
+   0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,
+  12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31
+};
+
+__attribute__((always_inline)) static char *my_strchr(char *p,char c){
   while(*p){
     if(*p == c) return p;
     else p++;
@@ -38,24 +54,7 @@ __attribute__((fastcall)) static char *my_strchr(char *p,char c){
   return 0;
 }
 
-typedef struct _ruler {
-  short x1,y1,x2,y2;
-  char min, max;
-  char *value;
-} ruler;
-
-void draw_ruler(ruler *rul){
-  int x1,y1,x2,y2;
-  x1 = rul->x1; x2 = rul->x2 + 1;
-  y1 = rul->y1; y2 = rul->y2 + 1;
-  glColor3ub(255,255,255);
-  glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
-  glRecti(x1-1,y2+2,x2+2,y1-1);
-  glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
-  if(rul->value) glRecti(x1,y1,(*(rul->value)-rul->min) * (x2-x1-1) / (rul->max-rul->min) + x1+1,y2);
-}
-
-__attribute__((fastcall)) static void move_ruler(ruler *rul, int x, int y){
+__attribute__((always_inline)) static void move_ruler(ruler *rul, int x, int y){
   if(!rul->value) return;
   if((x >= rul->x1) &&
      (x <= rul->x2) &&
@@ -74,6 +73,14 @@ void move_rulers(ruler *rul, int x, int y){
   do {
     move_ruler(rul++,x,y);
   } while(--i);
+}
+
+static void draw_ruler(ruler *rul){
+  glColor3ub(255,255,255);
+  glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+  glRecti(rul->x1-1,rul->y2+3,rul->x2+3,rul->y1-1);
+  glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+  if(rul->value) glRecti(rul->x1,rul->y1,(*(rul->value)-rul->min) * (rul->x2-rul->x1) / (rul->max-rul->min) + rul->x1+1,rul->y2+1);
 }
 
 static void draw_rulers(ruler *rul){
@@ -124,7 +131,7 @@ ruler R[RULERS] = {
   {176,96,303,100,0,127,NULL}
 };
 
-void bind_rulers(ruler r[], instrument *i){
+static void bind_rulers(ruler r[], instrument *i){
   r[0].value = &(i->a);
   r[1].value = &(i->s);
   r[2].value = (char *)&(i->type[0]);
@@ -186,23 +193,13 @@ void gui_init(){
   init_synth();
 }
 
-int fini = 0;
-char octave = 4;
-char keymap[] = 
-  "wsxdcvgbhnj,;l:m!"
-  "a\xe9z\"er(t-y\xe8ui\xe7o\xe0p^=$";
-char notetable[] = {
-   0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,
-  12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31
-};
-
-void select_instr(instrument *i){
+static void select_instr(instrument *i){
 	instr = i;
 	bind_rulers(R,i);
 	update_instr(i);
 }
 
-static void gui_check_event(){
+__attribute__((always_inline)) static void gui_check_event(){
   SDL_Event event;
   char *p;
 
