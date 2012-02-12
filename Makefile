@@ -1,8 +1,16 @@
-CFLAGS=-Os -Wall -m32
+CFLAGS=-Os -Wall
+LDFLAGS=
+LSDL=-lSDL
+
+ifeq ($(shell uname -m),x86_64)
+  LSDL=-lSDL-1.2
+  CFLAGS+= -m32
+  LDFLAGS+= -m elf_i386
+endif
 
 main: main.o synth.o gui.o
 	@echo "synth size: " `wc -c synth.o`
-	ld -m elf_i386 -dynamic-linker /lib/ld-linux.so.2 main.o synth.o gui.o -lSDL-1.2 -lGL -lGLU -o main
+	ld -dynamic-linker /lib/ld-linux.so.2 main.o synth.o gui.o $(LSDL) -lGL -lGLU -o main
 	@echo "unstripped size: " `wc -c main`
 	@strip -s -R .comment -R .gnu.version -R .eh_frame main >/dev/null
 	@echo "uncompressed size: " `wc -c main`
