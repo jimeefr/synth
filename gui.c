@@ -46,6 +46,18 @@ char notetable[] = {
   12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31
 };
 
+__attribute__((always_inline)) void usleep(int t){
+  struct timespec ts;
+  struct timespec *ts_p = &ts;
+  ts.tv_sec = t / 1000000;
+  ts.tv_nsec = (t % 1000000) * 1000;
+  asm("mov $162,%%eax\n"
+      "mov %0,%%ebx\n"
+      "xor %%ecx,%%ecx\n"
+      "int $0x80\n"
+      : : "m"(ts_p) : "eax","ebx","ecx");
+}
+
 __attribute__((always_inline)) static char *my_strchr(char *p,char c){
   while(*p){
     if(*p == c) return p;
@@ -187,6 +199,7 @@ static void draw_gui(){
 }
 
 void gui_init(){
+  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
   SDL_SetVideoMode(320,240,32,SDL_OPENGL);
   glViewport(0,0,320,240);
   bind_rulers(R,instr);
@@ -233,5 +246,6 @@ void gui_mainloop(){
   while(!fini){
     draw_gui();
     gui_check_event();
+    usleep(20000);
   }
 }
