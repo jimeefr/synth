@@ -2,7 +2,6 @@
 #include "synth.h"
 #include <SDL/SDL.h>
 #include <GL/gl.h>
-#include <GL/glu.h>
 
 typedef struct _ruler {
   short x1,y1,x2,y2;
@@ -178,7 +177,7 @@ static void draw_gui(){
   glClear(GL_COLOR_BUFFER_BIT);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluOrtho2D(0.,320.,240.,0.);
+  glOrtho(0.,320.,240.,0.,-1.,1.);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 
