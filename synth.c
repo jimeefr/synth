@@ -79,9 +79,10 @@ float do_note_instr(note_instr *n){
       out *= e * n->amp;
       n->cutoff = 16.f * my_pow(HALFTONE, (float) n->instr->cutoff);
       n->f = 1.5f * sin4k(n->cutoff * DT / 2.0f);
-      n->res = (float)(n->instr->res) / 127.f;
+      n->res = 1.f - (float)(n->instr->res) / 128.f;
       n->low += n->f * n->band;
-      float high = n->res * (out - n->band) - n->low;
+      float scale = my_pow(n->res, .5f);
+      float high = scale * out - n->res * n->band - n->low;
       n->band += n->f * high;
       out = n->low;
     }
