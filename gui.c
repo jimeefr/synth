@@ -47,14 +47,13 @@ char notetable[] = {
 
 __attribute__((always_inline)) void usleep(int t){
   struct timespec ts;
-  struct timespec *ts_p = &ts;
   ts.tv_sec = t / 1000000;
   ts.tv_nsec = (t % 1000000) * 1000;
   asm("mov $162,%%eax\n"
-      "mov %0,%%ebx\n"
+      "lea %0,%%ebx\n"
       "xor %%ecx,%%ecx\n"
       "int $0x80\n"
-      : : "m"(ts_p) : "eax","ebx","ecx");
+      : : "m"(ts) : "eax","ebx","ecx");
 }
 
 __attribute__((always_inline)) static char *my_strchr(char *p,char c){
