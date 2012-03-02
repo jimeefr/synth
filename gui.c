@@ -10,27 +10,27 @@ typedef struct _ruler {
 } ruler;
 
 instrument instr1 = {
- 5, 16 , 127, 5, /* a,d,s,r */
- { OSC_SAW, OSC_SAW, OSC_SAW }, /* osc_type */
+ 3, 16 , 127, 3, /* a,d,s,r */
+ { OSC_SAW, OSC_SQUARE, OSC_SAW }, /* osc_type */
  { 64, 64, 76 }, /* transpose */
  { 64, 64, 64 }, /* finetune */
  { 96, 96, 96 }, /* amplitude */
  { 15, 15, 15 }, /* unison */
- { 32, 32, 32 }, /* dispersion */
- 82, 100,        /* cutoff, res */
- 96, 64,         /* reverb_level, reverb_time */
+ { 32, 48, 32 }, /* dispersion */
+ 82, 112,        /* cutoff, res */
+ 96, 16,         /* reverb_level, reverb_time */
 };
 
 instrument instr2 = {
- 5, 16 , 127, 5, /* a,d,s,r */
- { OSC_SAW, OSC_SAW, OSC_SAW }, /* osc_type */
+ 3, 16 , 127, 3, /* a,d,s,r */
+ { OSC_SAW, OSC_SQUARE, OSC_SAW }, /* osc_type */
  { 64, 64, 76 }, /* transpose */
  { 64, 64, 64 }, /* finetune */
  { 96, 96, 96 }, /* amplitude */
  { 15, 15, 15 }, /* unison */
- { 32, 32, 32 }, /* dispersion */
- 82, 100,        /* cutoff, res */
- 96, 64,         /* reverb_level, reverb_time */
+ { 32, 48, 32 }, /* dispersion */
+ 82, 112,        /* cutoff, res */
+ 96, 16,         /* reverb_level, reverb_time */
 };
 
 instrument *instr = &instr1;
