@@ -9,7 +9,7 @@ typedef struct _ruler {
   char *value;
 } ruler;
 
-instrument instr1 = {
+static instrument instr1 = {
  3, 16 , 127, 3, /* a,d,s,r */
  { OSC_SAW, OSC_SQUARE, OSC_SAW }, /* osc_type */
  { 64, 64, 76 }, /* transpose */
@@ -21,7 +21,7 @@ instrument instr1 = {
  96, 16,         /* reverb_level, reverb_time */
 };
 
-instrument instr2 = {
+static instrument instr2 = {
  3, 16 , 127, 3, /* a,d,s,r */
  { OSC_SAW, OSC_SQUARE, OSC_SAW }, /* osc_type */
  { 64, 64, 76 }, /* transpose */
@@ -33,19 +33,19 @@ instrument instr2 = {
  96, 16,         /* reverb_level, reverb_time */
 };
 
-instrument *instr = &instr1;
+static instrument *instr = &instr1;
 
-int fini = 0;
-char octave = 4;
-char keymap[] = 
+static int fini = 0;
+static char octave = 4;
+static char keymap[] = 
   "wsxdcvgbhnj,;l:m!"
   "a\xe9z\"er(t-y\xe8ui\xe7o\xe0p^=$";
-char notetable[] = {
+static char notetable[] = {
    0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,
   12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31
 };
 
-__attribute__((always_inline)) void usleep(int t){
+__attribute__((always_inline)) static void usleep(int t){
   struct timespec ts;
   ts.tv_sec = t / 1000000;
   ts.tv_nsec = (t % 1000000) * 1000;
@@ -78,7 +78,7 @@ __attribute__((always_inline)) static void move_ruler(ruler *rul, int x, int y){
 
 #define RULERS 26
 
-void move_rulers(ruler *rul, int x, int y){
+static void move_rulers(ruler *rul, int x, int y){
   int i=RULERS;
   do {
     move_ruler(rul++,x,y);
@@ -112,7 +112,7 @@ static void create_ruler(ruler *rul,int x1, int y1, int x2, int y2, char min, ch
 }
 */
 
-ruler R[RULERS] = {
+static ruler R[RULERS] = {
   {16,16,143,20,0,127,NULL},
   {16,26,143,30,0,127,NULL},
   {16,46,143,50,0,3,NULL},

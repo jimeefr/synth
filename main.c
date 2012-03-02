@@ -2,7 +2,7 @@
 #include "gui.h"
 #include <SDL/SDL.h>
 
-void fetch_audio_buffer(void *userdata, Uint8 *stream, int len){
+static void fetch_audio_buffer(void *userdata, Uint8 *stream, int len){
   render_synth((short *)stream,len>>2);
 }
 
