@@ -15,16 +15,6 @@ __attribute__((always_inline)) static void echo(char *s,int l){
 }
 #endif
 
-//void usleep(int t){
-//  struct timespec ts;
-//  ts.tv_sec = t / 1000000;
-//  ts.tv_nsec = (t % 1000000) * 1000;
-//  asm("mov $162,%%eax\n"
-//      "xor %%ecx,%%ecx\n"
-//      "int $0x80\n"
-//      : : "b"(&ts) : "eax","ecx");
-//}
-
 void _start(){
   SDL_AudioSpec desired, obtained;
 
