@@ -3,6 +3,8 @@
 #include <SDL/SDL.h>
 #include <GL/gl.h>
 
+#define FACTOR (1)
+
 typedef struct _ruler {
   short x1,y1,x2,y2;
   char min, max;
@@ -86,10 +88,12 @@ static void move_rulers(ruler *rul, int x, int y){
 }
 
 static void draw_ruler(ruler *rul){
-  glColor3ub(255,255,255);
-  glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
-  glRecti(rul->x1-1,rul->y2+3,rul->x2+3,rul->y1-1);
   glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+  glColor3ub(192,192,192);
+  glRecti(rul->x1-2,rul->y2+3,rul->x2+3,rul->y1-2);
+  glColor3ub(64,64,64);
+  glRecti(rul->x1-1,rul->y2+2,rul->x2+2,rul->y1-1);
+  glColor3ub(255,255,255);
   if(rul->value) glRecti(rul->x1,rul->y1,(*(rul->value)-rul->min) * (rul->x2-rul->x1) / (rul->max-rul->min) + rul->x1+1,rul->y2+1);
 }
 
@@ -113,32 +117,32 @@ static void create_ruler(ruler *rul,int x1, int y1, int x2, int y2, char min, ch
 */
 
 static ruler R[RULERS] = {
-  {16,16,143,20,0,127,NULL},
-  {16,26,143,30,0,127,NULL},
-  {16,46,143,50,0,3,NULL},
-  {16,56,143,60,0,127,NULL},
-  {16,66,143,70,0,127,NULL},
-  {16,76,143,80,0,127,NULL},
-  {16,140,143,144,0,3,NULL},
-  {16,150,143,154,0,127,NULL},
-  {16,160,143,164,0,127,NULL},
-  {16,170,143,174,0,127,NULL},
-  {16,210,143,214,0,127,NULL},
-  {16,220,143,224,0,127,NULL},
-  {176,46,303,50,0,3,NULL},
-  {176,56,303,60,0,127,NULL},
-  {176,66,303,70,0,127,NULL},
-  {176,76,303,80,0,127,NULL},
-  {176,16,303,20,0,127,NULL},
-  {176,26,303,30,0,127,NULL},
-  {176,210,303,214,0,127,NULL},
-  {176,220,303,224,0,127,NULL},
-  {16,86,143,90,0,15,NULL},
-  {16,180,143,184,0,15,NULL},
-  {176,86,303,90,0,15,NULL},
-  {16,96,143,100,0,127,NULL},
-  {16,190,143,194,0,127,NULL},
-  {176,96,303,100,0,127,NULL}
+  {16,16,143,18,0,127,NULL},
+  {16,26,143,28,0,127,NULL},
+  {16,46,143,48,0,3,NULL},
+  {16,56,143,58,0,127,NULL},
+  {16,66,143,68,0,127,NULL},
+  {16,76,143,78,0,127,NULL},
+  {16,140,143,142,0,3,NULL},
+  {16,150,143,152,0,127,NULL},
+  {16,160,143,162,0,127,NULL},
+  {16,170,143,172,0,127,NULL},
+  {16,210,143,212,0,127,NULL},
+  {16,220,143,222,0,127,NULL},
+  {176,46,303,48,0,3,NULL},
+  {176,56,303,58,0,127,NULL},
+  {176,66,303,68,0,127,NULL},
+  {176,76,303,78,0,127,NULL},
+  {176,16,303,18,0,127,NULL},
+  {176,26,303,28,0,127,NULL},
+  {176,210,303,212,0,127,NULL},
+  {176,220,303,222,0,127,NULL},
+  {16,86,143,88,0,15,NULL},
+  {16,180,143,182,0,15,NULL},
+  {176,86,303,88,0,15,NULL},
+  {16,96,143,98,0,127,NULL},
+  {16,190,143,192,0,127,NULL},
+  {176,96,303,98,0,127,NULL}
 };
 
 static void bind_rulers(ruler r[], instrument *i){
@@ -181,7 +185,7 @@ static void draw_gui(){
   glLoadIdentity();
 
   draw_rulers(R);
-  glPointSize(4.f);
+  glPointSize(3.f*FACTOR);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
   glBegin(GL_POINTS);
@@ -198,8 +202,8 @@ static void draw_gui(){
 
 void gui_init(){
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-  SDL_SetVideoMode(320,240,32,SDL_OPENGL);
-  glViewport(0,0,320,240);
+  SDL_SetVideoMode(320*FACTOR,240*FACTOR,32,SDL_OPENGL);
+  glViewport(0,0,320*FACTOR,240*FACTOR);
   bind_rulers(R,instr);
   init_synth();
 }
@@ -229,7 +233,7 @@ __attribute__((always_inline)) static void gui_check_event(){
         release_note(octave*12 + notetable[p-keymap],20,instr);
       }
     } else if(event.type == SDL_MOUSEMOTION){
-      if(event.motion.state & SDL_BUTTON(1)) move_rulers(R,event.motion.x,event.motion.y);
+      if(event.motion.state & SDL_BUTTON(1)) move_rulers(R,event.motion.x/FACTOR,event.motion.y/FACTOR);
     } else if(event.type == SDL_MOUSEBUTTONDOWN){
       if(event.button.button == 1) move_rulers(R,event.button.x,event.button.y);
       else if(event.button.button == 5) { if(instr->cutoff>0) instr->cutoff--; }

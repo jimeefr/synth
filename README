@@ -1,0 +1,45 @@
+synth is a small synthetizer. It's intended to be
+embedded in small musical productions.
+
+synth.c is the main synthetizer module.
+gui.c adds a minimalistic opengl gui, for testing sounds.
+main.c opens audio channels and calls the gui.
+
+GUI description:
+
+   Envelope (Attack, Decay, Sustain, Release)
+  A[======================]  D[======================] 
+  S[======================]  R[======================]
+
+   Osc 1                      Osc 2
+   [======================]   [======================]
+   [======================]   [======================]
+   [======================]   [======================]
+   [======================]   [======================]
+   [======================]   [======================]
+   [======================]   [======================]
+
+   Osc 3
+   [======================]   Waveform : sine / saw / square / noise
+   [======================]   Transpose (1 pixel = 1 semitone)
+   [======================]   Fine tune (from -1/4 to +1/4 tone)
+   [======================]   Volume
+   [======================]   Polyphony voices (1 to 32)
+   [======================]   Polyphony frequency spread
+
+   Low-pass filter            Echo
+  C[======================]   [======================]  Time
+  Q[======================]   [======================]  Feedback
+     Cut-off / Resonance
+
+Keys:
+
+- Letters (azerty layout) : play notes.
+    wsxdcvgb... lower octave
+    aéz"er(t... upper octave
+- F1 : Step down 1 octave
+- F2 : Step up 1 octave
+- F3 / F4 : 2 instruments presets
+- < : Cut all notes
+- ESC : Quit
+
