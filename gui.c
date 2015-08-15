@@ -235,7 +235,7 @@ __attribute__((always_inline)) static void gui_check_event(){
     } else if(event.type == SDL_MOUSEMOTION){
       if(event.motion.state & SDL_BUTTON(1)) move_rulers(R,event.motion.x/FACTOR,event.motion.y/FACTOR);
     } else if(event.type == SDL_MOUSEBUTTONDOWN){
-      if(event.button.button == 1) move_rulers(R,event.button.x,event.button.y);
+      if(event.button.button == 1) move_rulers(R,event.button.x/FACTOR,event.button.y/FACTOR);
       else if(event.button.button == 5) { if(instr->cutoff>0) instr->cutoff--; }
       else if(event.button.button == 4) { if(instr->cutoff<127) instr->cutoff++; }
       else if(event.button.button == 6) { if(instr->res>0) instr->res--; }
